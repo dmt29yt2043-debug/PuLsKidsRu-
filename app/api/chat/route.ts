@@ -37,11 +37,11 @@ function computeDateAnchors() {
 function buildProfileBlock(profile?: UserProfile): string {
   if (!profile || !('children' in profile) || !Array.isArray(profile.children)) return '';
   const kids = profile.children.map((c) => {
-    const g = c.gender === 'girl' ? 'daughter' : c.gender === 'boy' ? 'son' : 'child';
+    const g = c.gender === 'girl' ? 'дочь' : c.gender === 'boy' ? 'сын' : 'ребёнок';
     const interests = c.interests?.length ? ` (${c.interests.join(', ')})` : '';
-    return `${g} ${c.age}yo${interests}`;
+    return `${g} ${c.age} лет${interests}`;
   }).join(', ');
-  return `User has: ${kids}. Personalize recommendations.`;
+  return `У пользователя: ${kids}. Учитывай это при подборе.`;
 }
 
 /**
@@ -63,85 +63,94 @@ function buildFilterExtractionPrompt(profile?: UserProfile): string {
     categoryList = 'family, arts, theater, attractions, books, holiday, sports, music, science, film, gaming, community';
   }
 
-  return `You extract structured search filters for an NYC family-events app. Return ONLY a JSON object: {"filters": {...}}.
+  return `Ты извлекаешь структурированные фильтры поиска для приложения мероприятий с детьми в Москве. Верни ТОЛЬКО JSON-объект: {"filters": {...}}.
 
-TODAY: ${d.today} (${d.dayOfWeek}), year ${d.year}.
-DATES: "tomorrow"=${d.tomorrow}. "this weekend"=dateFrom:"${d.saturday}",dateTo:"${d.sunday}". "this week"=dateFrom:"${d.today}",dateTo:"${d.thisWeekSunday}". "next week" starts ${d.nextMonday}. WEEKEND=Sat+Sun ONLY.
+СЕГОДНЯ: ${d.today} (${d.dayOfWeek}), год ${d.year}.
+ДАТЫ: "завтра"=${d.tomorrow}. "на выходных"/"в эти выходные"=dateFrom:"${d.saturday}",dateTo:"${d.sunday}". "на этой неделе"=dateFrom:"${d.today}",dateTo:"${d.thisWeekSunday}". "на следующей неделе" начинается с ${d.nextMonday}. ВЫХОДНЫЕ=только суббота и воскресенье.
 ${profileBlock ? '\n' + profileBlock + '\n' : ''}
 
-━━━ EXTRACTION RULES ━━━
-• Extract EVERY filter the user explicitly or implicitly mentions. Missing a clear filter is worse than including it.
-• Each message is a FRESH independent search — don't carry over from previous turns.
+━━━ ПРАВИЛА ИЗВЛЕЧЕНИЯ ━━━
+• Извлекай КАЖДЫЙ фильтр, который пользователь упомянул явно или неявно. Пропустить явный фильтр хуже, чем добавить его.
+• Каждое сообщение — НЕЗАВИСИМЫЙ поиск. Не переносить фильтры из прошлых реплик.
+• Понимай русские синонимы и разговорные варианты: "сводить ребёнка" = ищет событие для детей; "куда сходить" = общий запрос, без фильтров.
 
-LOCATION (always extract when mentioned):
-• "in Brooklyn" / "Brooklyn" → neighborhoods:["Brooklyn"]
-• "Manhattan" / "in Manhattan" → neighborhoods:["Upper Manhattan","Midtown","Lower Manhattan"]
-• "Midtown" / "Midtown Manhattan" / "near Midtown" → neighborhoods:["Midtown"]
-• "Upper Manhattan" / "Uptown" → neighborhoods:["Upper Manhattan"]
-• "Lower Manhattan" / "Downtown" → neighborhoods:["Lower Manhattan"]
-• "Queens" → neighborhoods:["Queens"]; "Bronx"/"the Bronx" → neighborhoods:["Bronx"]
-• "Staten Island" → neighborhoods:["Staten Island"]
-• "near me" / "close by" = NO location filter (we don't have user location)
+ЛОКАЦИЯ / ОКРУГА МОСКВЫ (извлекай при любом упоминании):
+• "центр" / "в центре" / "ЦАО" / "Центральный округ" / "на Арбате" / "на Тверской" → neighborhoods:["ЦАО"]
+• "север" / "САО" / "Северный округ" / "Сокол" / "Войковская" → neighborhoods:["САО"]
+• "северо-восток" / "СВАО" / "ВДНХ" / "Ботсад" / "Медведково" → neighborhoods:["СВАО"]
+• "восток" / "ВАО" / "Измайлово" / "Сокольники" → neighborhoods:["ВАО"]
+• "юго-восток" / "ЮВАО" / "Кузьминки" / "Печатники" → neighborhoods:["ЮВАО"]
+• "юг" / "ЮАО" / "Царицыно" / "Коломенская" → neighborhoods:["ЮАО"]
+• "юго-запад" / "ЮЗАО" / "Тёплый Стан" / "Университет" → neighborhoods:["ЮЗАО"]
+• "запад" / "ЗАО" / "Кунцево" / "Парк Победы" / "Фили" → neighborhoods:["ЗАО"]
+• "северо-запад" / "СЗАО" / "Строгино" / "Митино" → neighborhoods:["СЗАО"]
+• "в Москве" / "по Москве" (без уточнения) = НЕ добавлять фильтр (вся Москва по умолчанию)
+• "рядом" / "недалеко" / "близко" = НЕ добавлять фильтр (у нас нет геолокации)
 
-DATE:
-• No date mentioned = NO dateFrom/dateTo.
-• "today" → dateFrom:"${d.today}", dateTo:"${d.today}"
-• "tomorrow" → dateFrom:"${d.tomorrow}", dateTo:"${d.tomorrow}"
-• "this weekend" / "Saturday" / "Sunday" → dateFrom:"${d.saturday}", dateTo:"${d.sunday}"
-• "this week" → dateFrom:"${d.today}", dateTo:"${d.thisWeekSunday}"
+ДАТА:
+• Дата не упомянута = НЕ добавлять dateFrom/dateTo.
+• "сегодня" → dateFrom:"${d.today}", dateTo:"${d.today}"
+• "завтра" → dateFrom:"${d.tomorrow}", dateTo:"${d.tomorrow}"
+• "на выходных" / "в выходные" / "в субботу" / "в воскресенье" → dateFrom:"${d.saturday}", dateTo:"${d.sunday}"
+• "на этой неделе" → dateFrom:"${d.today}", dateTo:"${d.thisWeekSunday}"
+• "на каникулах" / "на праздниках" — не ставь даты (LLM не знает какие именно каникулы), лучше categories:["holiday"]
 
-PRICE:
-• "free" → isFree:true
-• "cheap" / "affordable" / "budget" → priceMax:25
-• "under \$N" / "less than \$N" / "cheaper than \$N" → priceMax:N
+ЦЕНА:
+• "бесплатно" / "бесплатные" / "халява" / "даром" → isFree:true
+• "недорого" / "дёшево" / "бюджетно" / "на бюджете" → priceMax:1000
+• "до N рублей" / "не дороже N" / "меньше N ₽" → priceMax:N
+• "за небольшие деньги" → priceMax:1500
 
-AGE (CRITICAL — extract whenever mentioned):
-• "5yo" / "5 year old" / "my 5 year old" / "age 5" / "kids 5" → ageMax:5
-• "4 and 7 year old" → ageMax:7 (widest)
-• "toddler" → ageMax:3. "preschool" → ageMax:5. "tweens" → ageMax:12.
-• "teen" / "teenager" / "13+" → ageMax:18 with search:"teen"
-• "baby" / "infant" / "under 2" → ageMax:2
+ВОЗРАСТ (КРИТИЧНО — извлекай ВСЕГДА при упоминании):
+• "5 лет" / "5-летке" / "пятилетке" / "ребёнку 5" / "сыну 5" / "дочке 5" → ageMax:5
+• "4 и 7 лет" → ageMax:7 (максимальный)
+• "малыш" / "крошка" / "до 3" / "карапуз" → ageMax:3
+• "дошкольник" / "детсадовец" → ageMax:5
+• "школьник" / "младший школьник" → ageMax:10
+• "подросток" / "тинейджер" / "13+" → ageMax:18 с search:"подросток"
+• "грудничок" / "младенец" / "до года" / "до 2 лет" → ageMax:2
 
-CATEGORIES — PREFER categories[] OVER search:
-• "art" / "arts" / "drawing" / "painting" / "craft" → categories:["arts"]
-• "museum" / "exhibit" → categories:["attractions","arts"]
-• "theater" / "show" / "play" / "ballet" / "circus" / "puppet" → categories:["theater"]
-• "music" / "concert" / "sing" → categories:["music"]
-• "dance" → categories:["theater","music"]
-• "science" / "STEM" / "STEAM" / "robotics" → categories:["science"]
-• "nature" / "hike" / "park" / "outdoor" → categories:["outdoors"]
-• "sports" / "running" / "swim" / "soccer" / "basketball" → categories:["sports"]
-• "reading" / "books" / "storytime" / "library" → categories:["books"]
-• "cooking for kids" / "baking for kids" / "kids cooking" / "cooking class" → categories:["family"], search:"cooking"
-• "cooking" / "food" / "baking" (adult/general context) → categories:["food"]
-• "movie" / "film" → categories:["film"]
-• "holiday" / "seasonal" / "Halloween" / "Christmas" / "Easter" / "Thanksgiving" → categories:["holiday"]
-• "birthday party venue" / "birthday party" → search:"birthday" (no category — venues span multiple categories)
-• Broad query ("things to do") → no category filter.
-• If the user says "art classes" and also "museum" → include BOTH: categories:["arts","attractions"].
+КАТЕГОРИИ — ПРЕДПОЧТИТАЙ categories[] ПЕРЕД search:
+• "рисование" / "творчество" / "живопись" / "арт" / "рисовать" / "лепка" → categories:["arts"]
+• "музей" / "выставка" / "экспозиция" → categories:["attractions","arts"]
+• "театр" / "спектакль" / "постановка" / "балет" / "цирк" / "кукольный" / "пьеса" → categories:["theater"]
+• "музыка" / "концерт" / "песня" / "опера" / "филармония" → categories:["music"]
+• "танцы" / "хореография" → categories:["theater","music"]
+• "наука" / "технологии" / "робототехника" / "программирование" / "STEM" → categories:["science"]
+• "природа" / "парк" / "поход" / "прогулка" / "зоопарк" / "улица" → categories:["outdoors"]
+• "спорт" / "футбол" / "плавание" / "гимнастика" / "каратэ" → categories:["sports"]
+• "книги" / "чтение" / "библиотека" / "литература" → categories:["books"]
+• "готовить" / "кулинария" / "мастер-класс по готовке" → categories:["family"], search:"кулинар"
+• "еда" / "гастрономия" (взрослый контекст) → categories:["food"]
+• "кино" / "фильм" / "мультфильм" → categories:["film"]
+• "праздник" / "фестиваль" / "Новый год" / "Пасха" / "Масленица" / "Хэллоуин" → categories:["holiday"]
+• "день рождения" / "праздновать др" → search:"день рождения" (разные категории)
+• "мастер-класс" / "воркшоп" / "курс" / "занятие" → categories:["education"]
+• "экскурсия" → categories:["attractions"]
+• Широкий запрос ("куда сходить", "чем заняться") → БЕЗ фильтра категорий.
+• Если пользователь упомянул "рисование и музей" → обе: categories:["arts","attractions"].
 
-SEARCH (fallback for specific phrases that no category captures):
-• "birthday" → search:"birthday"
-• "bilingual" / "Spanish" / "Spanish storytime" → search:"Spanish"
-• "indoor" / "rainy day" → search:"indoor"
-• "after school" / "after-school" / "after 3pm" / "weekday afternoon" → search:"after-school"
-• "stroller" / "stroller-friendly" already handled via strollerFriendly:true — do NOT also add search
-• Single keyword only — never multi-word search phrases.
+ПОИСК (fallback для специфических фраз):
+• "день рождения" → search:"день рождения"
+• "двуязычное" / "на английском" → search:"английский"
+• "в помещении" / "крытый" / "в дождь" → search:"крытый"
+• "после школы" / "после уроков" / "будни днём" → search:"после школы"
+• Только 1-2 слова, не длинные фразы.
 
-ACCESSIBILITY:
-• "wheelchair" / "accessible" → wheelchairAccessible:true
-• "stroller" / "stroller-friendly" → strollerFriendly:true
+ДОСТУПНОСТЬ:
+• "инвалидная коляска" / "для колясочников" / "доступно" → wheelchairAccessible:true
+• "с коляской" / "колясочно-дружелюбно" / "для малышей в коляске" → strollerFriendly:true
 
-━━━ BALANCE RULES ━━━
-• LEAN BROAD. If you're deciding between one narrow category and two broader ones, pick the broader option. We'd rather show too many decent events than zero matches.
-• Don't combine highly restrictive filters unless the user is specific. e.g. "theater for 7yo girl in Brooklyn on Sat" = all four filters. But "fun things for 7yo" = just ageMax:7.
-• Never invent filters the user didn't imply.
+━━━ ПРАВИЛА БАЛАНСА ━━━
+• ИДИ ШИРЕ. Если выбираешь между одной узкой и двумя широкими категориями — бери широкие. Лучше показать больше приличных событий, чем 0.
+• Не комбинируй много фильтров если пользователь не конкретизирует. "Театр для 7-летки в ЦАО на субботу" = все 4. Но "куда пойти с 7-леткой" = только ageMax:7.
+• Никогда не придумывай фильтры, которых пользователь не подразумевал.
 
-Available fields: categories(string[]), isFree(bool), ageMax(number), priceMax(number), dateFrom(YYYY-MM-DD), dateTo(YYYY-MM-DD), search(string), neighborhoods(string[]), wheelchairAccessible(bool), strollerFriendly(bool)
-Valid categories: ${categoryList}
-Valid neighborhoods: "Upper Manhattan","Midtown","Lower Manhattan","Brooklyn","Queens","Bronx","Staten Island"
+Доступные поля: categories(string[]), isFree(bool), ageMax(number), priceMax(number), dateFrom(YYYY-MM-DD), dateTo(YYYY-MM-DD), search(string), neighborhoods(string[]), wheelchairAccessible(bool), strollerFriendly(bool)
+Валидные категории: ${categoryList}
+Валидные округа: "ЦАО","САО","СВАО","ВАО","ЮВАО","ЮАО","ЮЗАО","ЗАО","СЗАО"
 
-RESPONSE: {"filters":{...}}   (filters only — no message, no commentary)`;
+ОТВЕТ: {"filters":{...}}   (только фильтры — без сообщения, без комментариев)`;
 }
 
 /**
@@ -162,12 +171,12 @@ function buildMessagePrompt(
   const profileBlock = buildProfileBlock(profile);
 
   const eventsBlock = events.length === 0
-    ? '(no events matched — apologize briefly and suggest the user relax a filter)'
+    ? '(ничего не нашлось — коротко извинись и предложи расслабить один фильтр)'
     : events.slice(0, 15).map((e, i) => {
-        const date = e.next_start_at ? String(e.next_start_at).slice(0, 10) : 'date TBD';
-        const price = e.is_free ? 'FREE' : (e.price_summary || 'paid');
-        const venue = e.venue_name || 'TBA';
-        const ages = e.age_best_from != null ? `ages ${e.age_best_from}-${e.age_best_to ?? '?'}` : 'ages unrestricted';
+        const date = e.next_start_at ? String(e.next_start_at).slice(0, 10) : 'дата уточняется';
+        const price = e.is_free ? 'БЕСПЛАТНО' : (e.price_summary || 'платно');
+        const venue = e.venue_name || 'место уточняется';
+        const ages = e.age_best_from != null ? `${e.age_best_from}-${e.age_best_to ?? '?'} лет` : 'возраст любой';
         return `${i + 1}. "${e.title}" | ${venue} | ${date} | ${price} | ${ages}`;
       }).join('\n');
 
@@ -175,64 +184,64 @@ function buildMessagePrompt(
     v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)
   );
   const filterSummary = activeFilters.length === 0
-    ? 'no active filters'
+    ? 'без фильтров'
     : activeFilters.map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : v}`).join(', ');
 
-  // Infer the age/topic focus of the user's query so personalization is honest.
-  const queryHasAge = /\b(\d{1,2})\s?(yo|y\.o\.|year[- ]?old)|\b(toddler|teen|teenager|preschool|tween|baby|infant)\b/i.test(userMessage);
-  const queryHasTopic = /\b(teen|toddler|baby|infant|preschool|tween|adult)\b/i.test(userMessage);
+  // Определяем, упомянул ли пользователь возраст — для нюанса персонализации.
+  const queryHasAge = /\b(\d{1,2})\s?(лет|год|года)\b|\b(малыш|подросток|тинейджер|дошкольн|младенец|грудничок|школьн)/i.test(userMessage);
+  const queryHasTopic = /\b(подросток|малыш|грудничок|дошкольник|младший школьник|взрослый)/i.test(userMessage);
 
-  // The chat assistant should NOT describe events in detail — the user has the
-  // event cards visible in the feed (with images, dates, venues, prices, links).
-  // Long descriptions in chat are unreadable AND can't be clicked. The chat's
-  // job is to (1) confirm we matched the request, (2) point at the feed,
-  // (3) optionally name 1 event by title as a teaser. That's it.
+  // Чат-помощник НЕ должен описывать события подробно — пользователь видит
+  // карточки событий в ленте (с фото, датой, местом, ценой, ссылкой).
+  // Длинные описания в чате нечитабельны И по ним нельзя кликнуть.
+  // Задача чата: (1) подтвердить, что мы нашли что нужно, (2) указать на ленту,
+  // (3) опционально назвать 1 событие как тизер. Всё.
   const eventCount = events.length;
 
-  return `You are PulseUp, a warm NYC family-events concierge. Write a VERY SHORT reply (1–2 sentences max, ≤25 words) that points the user to the event feed on the right.
+  return `Ты PulseUp — заботливый помощник по семейным мероприятиям в Москве. Напиши ОЧЕНЬ КОРОТКИЙ ответ (1-2 предложения, ≤25 слов), который указывает пользователю на ленту событий справа.
 
-User asked: "${userMessage}"
-Filters applied: ${filterSummary}
-Events shown in the feed: ${eventCount}
-${wasRelaxed ? '\n⚠  We had to relax some filters to find matches — acknowledge this briefly ("Couldn\'t find exact X — here\'s the closest").' : ''}
+Пользователь спросил: "${userMessage}"
+Применённые фильтры: ${filterSummary}
+Событий в ленте: ${eventCount}
+${wasRelaxed ? '\n⚠  Пришлось ослабить часть фильтров чтобы найти совпадения — упомяни это кратко ("Точно такого не нашлось — показываю похожее").' : ''}
 ${profileBlock ? '\n' + profileBlock : ''}
 
-━━━ EVENTS NOW IN THE FEED (you may name AT MOST one as a teaser) ━━━
+━━━ СОБЫТИЯ В ЛЕНТЕ (можно упомянуть НЕ БОЛЕЕ ОДНОГО как тизер) ━━━
 ${eventsBlock}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-━━━ HOW TO REPLY ━━━
-The feed (event cards) is visible to the user — they will browse it themselves. Your reply must be a short pointer, not a description.
+━━━ КАК ОТВЕЧАТЬ ━━━
+Лента (карточки событий) видна пользователю — он сам будет её смотреть. Твой ответ — это короткий указатель, не описание.
 
-GOOD examples (copy this style):
-  • "Found ${eventCount} events for you — check the feed →"
-  • "Here are ${eventCount} options that fit. ${eventCount > 0 ? 'Tap any card for details.' : ''}"
-  • "${eventCount > 0 ? 'Got it — see the feed for ' + eventCount + ' matching events.' : 'Sorry, no matches — try loosening your filters.'}"
+ХОРОШО (копируй такой стиль):
+  • "Нашла ${eventCount} вариантов — смотрите ленту →"
+  • "Вот ${eventCount} подходящих событий. ${eventCount > 0 ? 'Кликните на карточку — увидите детали.' : ''}"
+  • "${eventCount > 0 ? 'Готово — в ленте ' + eventCount + ' событий под ваш запрос.' : 'К сожалению, ничего не нашлось. Попробуйте убрать один из фильтров.'}"
 
-OK to mention ONE event by exact title as a teaser (no details):
-  • "${eventCount} options — including \"<exact-title>\". See the feed →"
+МОЖНО упомянуть ОДНО событие по точному названию как тизер (без деталей):
+  • "${eventCount} вариантов — включая \"<точное-название>\". Смотрите ленту →"
 
-BAD (never do this):
-  ✗ "I recommend the 'Recycled Ocean Crafts' at The Whaling Museum on April 23, which is free for ages 5-10. Another option is..."  ← long description, no link, useless
-  ✗ Listing 2+ events with details
-  ✗ Multiple sentences describing what each event is
+ПЛОХО (никогда так не пиши):
+  ✗ "Рекомендую «Ночь в Третьяковке», это выставка графики XIX века, которая проходит 23 апреля и бесплатна для детей 5-10 лет. Ещё один вариант..."  ← длинное описание, бесполезно
+  ✗ Перечислять 2+ события с деталями
+  ✗ Несколько предложений описывающих каждое событие
 
-━━━ STRICT RULES ━━━
+━━━ ЖЁСТКИЕ ПРАВИЛА ━━━
 1. ${eventCount === 0
-    ? 'Empty feed — apologize in ONE short sentence and suggest one filter to relax (location, date, or category). Do NOT invent alternatives.'
-    : 'Reply MUST be ≤ 25 words. Direct the user to the feed. Optionally name ONE event by EXACT title from the list — never describe it in detail.'}
-2. NEVER invent events, venues, dates, prices, or quote events not in the list.
-3. NEVER write descriptions like "designed for ages X-Y", "perfect for", "great option", "another good one is" — these belong on the event card, not in chat.
+    ? 'Лента пуста — извинись ОДНИМ коротким предложением и предложи один фильтр ослабить (локация, дата, категория). НЕ придумывай альтернативы.'
+    : 'Ответ ОБЯЗАТЕЛЬНО ≤ 25 слов. Направь пользователя в ленту. Можно назвать ОДНО событие ТОЧНЫМ названием из списка — никогда не описывать детали.'}
+2. НИКОГДА не придумывай события, места, даты, цены и не цитируй события не из списка.
+3. НИКОГДА не пиши "для возраста X-Y", "идеально для", "отличный вариант", "ещё один хороший" — это на карточке события, не в чате.
 
-━━━ FORBIDDEN PHRASES (enforced by post-processing) ━━━
-4. NEVER write "for your X-year-old", "your kid(s) will love", "your child", "your little one", "your family will enjoy" — the app strips these automatically.
-5. ${queryHasAge ? 'User mentioned a specific age — be brief, point at feed.' : queryHasTopic ? 'User mentioned an age group — be brief, point at feed.' : 'No age focus — keep the reply brief and neutral.'}
+━━━ ЗАПРЕЩЁННЫЕ ФРАЗЫ (вырезаются автоматически) ━━━
+4. НИКОГДА не пиши "для вашего N-летнего", "вашему ребёнку понравится", "ваш малыш", "ваша семья оценит" — приложение их автоматически удаляет.
+5. ${queryHasAge ? 'Пользователь упомянул возраст — будь краткой, указывай на ленту.' : queryHasTopic ? 'Пользователь упомянул возрастную группу — будь краткой, указывай на ленту.' : 'Возраст не упоминается — ответ нейтральный и короткий.'}
 
-━━━ FORMAT ━━━
-6. 1–2 short sentences MAX, ≤ 25 words total. Plain text. No emoji except → if natural. No markdown.
-7. Never say "I'll search", "let me know", "stay tuned".
+━━━ ФОРМАТ ━━━
+6. 1-2 коротких предложения МАКСИМУМ, ≤ 25 слов всего. Обычный текст. Без эмоджи кроме → если уместно. Без markdown.
+7. Никогда не говори "сейчас поищу", "дайте знать", "следите за обновлениями".
 
-Return JSON: {"message":"your ≤25-word reply"}`;
+Верни JSON: {"message":"твой ответ ≤25 слов"}`;
 }
 
 export async function POST(request: Request) {
@@ -346,25 +355,43 @@ Return ONLY the JSON object.`,
     // Normalize location field (LLM sometimes uses `location` instead of `neighborhoods`)
     if (extractedFilters.location) {
       const loc = extractedFilters.location.toLowerCase().trim();
-      const stripTerms = ['new york city', 'nyc', 'new york, ny', 'new york city, ny', 'new york'];
+      // "Москва" без уточнения = вся Москва → сбросить, чтобы не фильтровать
+      const stripTerms = ['москва', 'москва,россия', 'moscow', 'мск', 'вся москва'];
       if (stripTerms.includes(loc)) {
         delete extractedFilters.location;
       }
-      const boroughMap: Record<string, string[]> = {
-        'manhattan': ['Upper Manhattan', 'Midtown', 'Lower Manhattan'],
-        'brooklyn': ['Brooklyn'],
-        'queens': ['Queens'],
-        'bronx': ['Bronx'],
-        'the bronx': ['Bronx'],
-        'staten island': ['Staten Island'],
-        'midtown': ['Midtown'],
-        'upper manhattan': ['Upper Manhattan'],
-        'lower manhattan': ['Lower Manhattan'],
-        'downtown': ['Lower Manhattan'],
-        'uptown': ['Upper Manhattan'],
+      // Ручной маппинг: если LLM вернула текст вместо slug округа
+      const districtMap: Record<string, string[]> = {
+        // ЦАО
+        'центр': ['ЦАО'], 'центральный': ['ЦАО'], 'центре': ['ЦАО'], 'цао': ['ЦАО'],
+        'арбат': ['ЦАО'], 'тверская': ['ЦАО'], 'китай-город': ['ЦАО'], 'чистые пруды': ['ЦАО'],
+        // САО
+        'север': ['САО'], 'северный': ['САО'], 'сао': ['САО'],
+        'сокол': ['САО'], 'войковская': ['САО'], 'аэропорт': ['САО'],
+        // СВАО
+        'северо-восток': ['СВАО'], 'северо-восточный': ['СВАО'], 'свао': ['СВАО'],
+        'вднх': ['СВАО'], 'ботанический сад': ['СВАО'], 'медведково': ['СВАО'],
+        // ВАО
+        'восток': ['ВАО'], 'восточный': ['ВАО'], 'вао': ['ВАО'],
+        'измайлово': ['ВАО'], 'сокольники': ['ВАО'], 'преображенская': ['ВАО'],
+        // ЮВАО
+        'юго-восток': ['ЮВАО'], 'юго-восточный': ['ЮВАО'], 'ювао': ['ЮВАО'],
+        'кузьминки': ['ЮВАО'], 'печатники': ['ЮВАО'], 'текстильщики': ['ЮВАО'],
+        // ЮАО
+        'юг': ['ЮАО'], 'южный': ['ЮАО'], 'юао': ['ЮАО'],
+        'царицыно': ['ЮАО'], 'коломенская': ['ЮАО'], 'автозаводская': ['ЮАО'],
+        // ЮЗАО
+        'юго-запад': ['ЮЗАО'], 'юго-западный': ['ЮЗАО'], 'юзао': ['ЮЗАО'],
+        'тёплый стан': ['ЮЗАО'], 'теплый стан': ['ЮЗАО'], 'университет': ['ЮЗАО'], 'профсоюзная': ['ЮЗАО'],
+        // ЗАО
+        'запад': ['ЗАО'], 'западный': ['ЗАО'], 'зао': ['ЗАО'],
+        'кунцево': ['ЗАО'], 'парк победы': ['ЗАО'], 'фили': ['ЗАО'], 'крылатское': ['ЗАО'],
+        // СЗАО
+        'северо-запад': ['СЗАО'], 'северо-западный': ['СЗАО'], 'сзао': ['СЗАО'],
+        'строгино': ['СЗАО'], 'митино': ['СЗАО'], 'тушино': ['СЗАО'], 'щукинская': ['СЗАО'],
       };
-      if (boroughMap[loc]) {
-        extractedFilters.neighborhoods = boroughMap[loc];
+      if (districtMap[loc]) {
+        extractedFilters.neighborhoods = districtMap[loc];
         delete extractedFilters.location;
       }
     }
@@ -458,7 +485,7 @@ Return ONLY the JSON object.`,
       } else if (!responseText) {
         responseText = eventsResult.events.length > 0
           ? buildFallbackMessage(eventsResult.events, profile)
-          : "I couldn't find events matching all your criteria. Try loosening the location or date.";
+          : "Не нашла мероприятий по всем вашим критериям. Попробуйте ослабить локацию или дату.";
       }
 
       // Post-hoc personalization guard — strip "for your X-year-old" phrases
@@ -470,7 +497,7 @@ Return ONLY the JSON object.`,
       console.error('[chat] message-generation call failed:', err);
       responseText = eventsResult.events.length > 0
         ? buildFallbackMessage(eventsResult.events, profile)
-        : "Sorry, something went wrong generating a reply. The events below should still match your search.";
+        : "Извините, произошла ошибка. События ниже всё же должны соответствовать вашему запросу.";
     }
 
     return Response.json({
@@ -509,43 +536,57 @@ function stripFalsePersonalization(message: string, events: Event[]): string {
 
   let cleaned = message;
 
-  // 1) "— great for your 4-year-old" / ", perfect for your kid"
-  //    Do NOT consume the trailing period/exclamation — leave it as the
-  //    natural sentence terminator (e.g. "Event (free). Or try…").
+  // ─── Russian patterns ──────────────────────────────────────────────────
+
+  // 1) "отлично подойдёт вашему 4-летнему сыну" / "идеально для вашего ребёнка"
+  cleaned = cleaned.replace(
+    /\s*[—\-,]?\s*(?:отлично|идеально|прекрасно|замечательно|шикарно|супер|великолепно|потрясающе)\s+(?:подойдёт|подойдет|подходит|для)\s+ваш(?:ему|ей|его)?\s+(?:\d{1,2}[- ]?лет(?:нему|ней)?|ребёнку|ребенку|малыш[уе]|сын[уа]|дочк[уе]|дочери|семье|тинейджер[уа]|подростку)\b[^.!,]*/gi,
+    '',
+  );
+
+  // 2) "вашему ребёнку понравится…" / "ваш 4-летний сын оценит…" — до конца предложения
+  cleaned = cleaned.replace(
+    /\s*[—\-,]?\s*ваш(?:ему|ей|его|а|их|и|е)?\s+(?:\d{1,2}[- ]?лет(?:ний|няя|нему|ней)?|ребёнок|ребенок|ребёнку|ребенку|малыш[уаое]?|сын[уаово]?|дочк[аеу]?|дочь|семь[яяе]|семью|подросток|подростку)\s+(?:будет|обязательно\s+)?(?:понрав(?:ится|ятся|ется)|оценит|полюбит|обожает|получит удовольствие|в восторге)[^.!]*(?=[.!])/gi,
+    '',
+  );
+
+  // 3) Голое "для вашего N-летнего" / "для вашего ребёнка" без наречия спереди
+  cleaned = cleaned.replace(
+    /\s+для\s+ваш(?:его|ей|ему|ей|их)?\s+(?:\d{1,2}[- ]?лет(?:него|ней)?|ребёнка|ребенка|малыша|сына|дочки|дочери|семьи|тинейджера|подростка)\b/gi,
+    '',
+  );
+
+  // 4) "идеально/отлично подходит вашему <что-угодно>"
+  cleaned = cleaned.replace(
+    /\s*[—\-,]?\s*(?:идеально|отлично|хорошо)\s+подход(?:ит|ят)\s+ваш(?:ему|ей|его|а)?\s+[^.!,]+(?=[.!,])/gi,
+    '',
+  );
+
+  // ─── English patterns (kept in case LLM slips into English) ───────────
+
   cleaned = cleaned.replace(
     /\s*[—\-,]?\s*(?:great|perfect|fantastic|awesome|ideal|fun|lovely|super|wonderful|exciting)\s+for\s+your\s+(?:\d{1,2}[- ]?(?:year[- ]?old|yo)|kid|child|little one|family|toddler|teen|son|daughter|boys?|girls?)s?\b/gi,
     '',
   );
-
-  // 2) "your kid(s) will love …" / "your 4yo will enjoy …" — consume up to
-  //    sentence terminator so the whole clause goes.
   cleaned = cleaned.replace(
     /\s*[—\-,]?\s*your\s+(?:kid|child|little one|family|son|daughter|toddler|teen|\d{1,2}[- ]?(?:year[- ]?old|yo))s?\s+(?:will\s+)?(?:love|enjoy|adore|have fun|get a kick out|be excited)[^.!]*(?=[.!])/gi,
     '',
   );
-
-  // 3) Bare "for your 4-year-old" / "for your kid" without a preceding adjective
   cleaned = cleaned.replace(
     /\s+for\s+your\s+(?:\d{1,2}[- ]?(?:year[- ]?old|yo)|kid|child|little one|family|toddler)s?\b/gi,
     '',
   );
 
-  // 4) "ideal/suitable/appropriate for your <anything>"
-  cleaned = cleaned.replace(
-    /\s*[—\-,]?\s*(?:ideal|suitable|appropriate)\s+for\s+your\s+[^.!,]+(?=[.!,])/gi,
-    '',
-  );
-
-  // Clean up leftover punctuation, spacing, and orphan connectors
+  // Чистим мусор пунктуации и пустые связки
   cleaned = cleaned
     .replace(/\s*—\s*(?=[.!,])/g, '')                 // "…—." → "…."
-    .replace(/\s*[—\-]\s*$/gm, '')                     // dangling em-dash at end
-    .replace(/\s+(?:that|which|and|option\s+that)\s*(?=[.!,])/gi, '') // orphan connectors
-    .replace(/\s+is\s+a\s+(?:fantastic|great|lovely|perfect|wonderful)\s+option\s*(?=[.!,])/gi, '') // "is a fantastic option."
-    .replace(/\s{2,}/g, ' ')                            // collapse double spaces
+    .replace(/\s*[—\-]\s*$/gm, '')                     // висящий дэш в конце
+    .replace(/\s+(?:который|что|и|вариант\s+которы[йе])\s*(?=[.!,])/gi, '') // связки-сироты
+    .replace(/\s+(?:—\s+)?(?:отличный|прекрасный|великолепный|шикарный)\s+вариант\s*(?=[.!,])/gi, '') // "— отличный вариант."
+    .replace(/\s{2,}/g, ' ')                            // двойные пробелы
     .replace(/\s+([.!,])/g, '$1')                       // " ." → "."
     .replace(/([.!])\s*\1+/g, '$1')                     // ".." → "."
-    .replace(/^\s*[—\-,.]+\s*/g, '')                    // leading punct after strip
+    .replace(/^\s*[—\-,.]+\s*/g, '')                    // мусор в начале
     .trim();
 
   return cleaned || message;
@@ -557,18 +598,22 @@ function stripFalsePersonalization(message: string, events: Event[]): string {
  * directly from the event list.
  */
 function buildFallbackMessage(events: Event[], profile?: UserProfile): string {
-  void profile; // intentionally ignored — we never make unverifiable age claims
+  void profile; // намеренно игнорируем — не делаем неверифицируемых заявлений о возрасте
   if (events.length === 0) {
-    return "I couldn't find events matching your criteria. Try loosening the location or date.";
+    return "К сожалению, не нашла мероприятий по вашему запросу. Попробуйте ослабить локацию или дату.";
   }
   const describe = (e: Event): string => {
-    const date = e.next_start_at ? new Date(String(e.next_start_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-    const price = e.is_free ? 'free' : (e.price_summary || '');
-    const ages = e.age_best_from != null ? `ages ${e.age_best_from}${e.age_best_to != null && e.age_best_to !== e.age_best_from ? '–' + e.age_best_to : '+'}` : '';
+    const date = e.next_start_at
+      ? new Date(String(e.next_start_at)).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' })
+      : '';
+    const price = e.is_free ? 'бесплатно' : (e.price_summary || '');
+    const ages = e.age_best_from != null
+      ? `${e.age_best_from}${e.age_best_to != null && e.age_best_to !== e.age_best_from ? '–' + e.age_best_to : '+'} лет`
+      : '';
     const parts = [price, date, ages].filter(Boolean).join(', ');
-    return `"${e.title}"${parts ? ` (${parts})` : ''}`;
+    return `«${e.title}»${parts ? ` (${parts})` : ''}`;
   };
-  let msg = `Check out ${describe(events[0])}.`;
-  if (events.length > 1) msg += ` Or try ${describe(events[1])}.`;
+  let msg = `Посмотрите ${describe(events[0])}.`;
+  if (events.length > 1) msg += ` Или попробуйте ${describe(events[1])}.`;
   return msg;
 }

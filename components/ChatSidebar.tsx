@@ -59,30 +59,25 @@ function wasEmailRecentlyDeclined(): boolean {
   return Date.now() - ts < EMAIL_DECLINED_TTL_MS;
 }
 
-const INTEREST_OPTIONS = ['Active', 'Creative', 'Educational', 'Shows', 'Outdoor', 'Fun & Play', 'Adventure', 'Books', 'Social'];
-const NEIGHBORHOOD_OPTIONS = ['Upper Manhattan', 'Midtown', 'Lower Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'Anywhere in NYC'];
-const BUDGET_OPTIONS = ['Free only', 'Under $25', 'Under $50', 'Under $75', 'Under $100', 'Any budget'];
+const INTEREST_OPTIONS = ['Активные', 'Творческие', 'Развивающие', 'Шоу', 'На улице', 'Игры', 'Приключения', 'Книги', 'Общение'];
+const NEIGHBORHOOD_OPTIONS = ['ЦАО', 'САО', 'СВАО', 'ВАО', 'ЮВАО', 'ЮАО', 'ЮЗАО', 'ЗАО', 'СЗАО', 'Вся Москва'];
+const BUDGET_OPTIONS = ['Бесплатно', 'До 500 ₽', 'До 1000 ₽', 'До 2000 ₽', 'До 3000 ₽', 'Любой бюджет'];
 
 const INTEREST_TO_CATEGORIES: Record<string, string[]> = {
-  'Active': ['sports', 'attractions'],
-  'Creative': ['arts', 'Art'],
-  'Educational': ['books', "Children's Activities"],
-  'Shows': ['theater'],
-  'Outdoor': ['attractions'],
-  'Fun & Play': ['family', "Children's Activities"],
-  'Adventure': ['attractions'],
-  'Books': ['books'],
-  'Social': ['family'],
+  'Активные':     ['sports', 'outdoors'],
+  'Творческие':   ['arts'],
+  'Развивающие': ['education', 'books'],
+  'Шоу':          ['theater'],
+  'На улице':    ['outdoors', 'attractions'],
+  'Игры':         ['family'],
+  'Приключения': ['attractions', 'outdoors'],
+  'Книги':        ['books'],
+  'Общение':     ['family', 'community'],
 };
 
-// Quiz interests → API categories. Must cover all 9 values from
-// docs/quiz-url-contract.md + any legacy fallbacks.
-//
-// Design rule: map each interest to the MOST SPECIFIC and LITERAL categories
-// only. Adding extra "helpful" categories (like "Children's Activities" to
-// every kid-focused interest) pollutes the category filter — the user who
-// picks "Science & tech" on quiz does NOT want "Parents & Kids" auto-selected
-// alongside it. Keep it minimal; the auto-broaden logic in chat handles gaps.
+// Slugи квиза (внешний контракт — остаются на English) → категории в RU-базе.
+// Дизайн-правило: минимум — только самые специфичные категории.
+// Пустые категории лучше, чем шумные: auto-broaden в чате добьёт пробелы.
 const QUIZ_INTEREST_TO_CATEGORIES: Record<string, string[]> = {
   outdoor:     ['outdoors'],
   playgrounds: ['outdoors', 'family'],
@@ -90,8 +85,8 @@ const QUIZ_INTEREST_TO_CATEGORIES: Record<string, string[]> = {
   classes:     ['education', 'arts'],
   arts_crafts: ['arts'],
   sports:      ['sports'],
-  science:     ['science'],
-  animals:     ['outdoors', 'nature'],
+  science:     ['science', 'education'],
+  animals:     ['outdoors', 'attractions'],
   indoor_play: ['family', 'attractions'],
   // Legacy / alternate labels
   theater: ['theater'],
@@ -99,14 +94,30 @@ const QUIZ_INTEREST_TO_CATEGORIES: Record<string, string[]> = {
   play:    ['family'],
 };
 
+// Квиз присылает slugи округов. Маппинг на названия из NEIGHBORHOOD_BOUNDS (lib/db.ts).
 const BOROUGH_TO_NEIGHBORHOODS: Record<string, string[]> = {
-  manhattan: ['Upper Manhattan', 'Midtown', 'Lower Manhattan'],
-  brooklyn: ['Brooklyn'],
-  queens: ['Queens'],
-  bronx: ['Bronx'],
-  'staten island': ['Staten Island'],
-  staten_island:   ['Staten Island'],   // quiz sends with underscore
-  other:           [],                   // free-text area — no borough filter
+  // ЦАО
+  cao: ['ЦАО'], tsao: ['ЦАО'], center: ['ЦАО'], центр: ['ЦАО'], центральный: ['ЦАО'],
+  // САО
+  sao: ['САО'], north: ['САО'], север: ['САО'], северный: ['САО'],
+  // СВАО
+  svao: ['СВАО'], northeast: ['СВАО'], 'северо-восток': ['СВАО'],
+  // ВАО
+  vao: ['ВАО'], east: ['ВАО'], восток: ['ВАО'],
+  // ЮВАО
+  uvao: ['ЮВАО'], yuvao: ['ЮВАО'], southeast: ['ЮВАО'], 'юго-восток': ['ЮВАО'],
+  // ЮАО
+  uao: ['ЮАО'], yuao: ['ЮАО'], south: ['ЮАО'], юг: ['ЮАО'], южный: ['ЮАО'],
+  // ЮЗАО
+  uzao: ['ЮЗАО'], yuzao: ['ЮЗАО'], southwest: ['ЮЗАО'], 'юго-запад': ['ЮЗАО'],
+  // ЗАО
+  zao: ['ЗАО'], west: ['ЗАО'], запад: ['ЗАО'], западный: ['ЗАО'],
+  // СЗАО
+  szao: ['СЗАО'], northwest: ['СЗАО'], 'северо-запад': ['СЗАО'],
+  // Общее / другое
+  other: [],
+  anywhere: [],
+  all: [],
 };
 
 function genderEmoji(gender: string): string {
@@ -173,16 +184,16 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       // categories so the "What" filter stays at the default "Activities".
     }
 
-    if (p.neighborhoods && p.neighborhoods.length > 0 && !p.neighborhoods.includes('Anywhere in NYC')) {
+    if (p.neighborhoods && p.neighborhoods.length > 0 && !p.neighborhoods.includes('Вся Москва')) {
       newFilters.neighborhoods = p.neighborhoods;
     }
 
     if (p.budget) {
-      if (p.budget === 'Free only') newFilters.isFree = true;
-      else if (p.budget === 'Under $25') newFilters.priceMax = 25;
-      else if (p.budget === 'Under $50') newFilters.priceMax = 50;
-      else if (p.budget === 'Under $75') newFilters.priceMax = 75;
-      else if (p.budget === 'Under $100') newFilters.priceMax = 100;
+      if (p.budget === 'Бесплатно') newFilters.isFree = true;
+      else if (p.budget === 'До 500 ₽')  newFilters.priceMax = 500;
+      else if (p.budget === 'До 1000 ₽') newFilters.priceMax = 1000;
+      else if (p.budget === 'До 2000 ₽') newFilters.priceMax = 2000;
+      else if (p.budget === 'До 3000 ₽') newFilters.priceMax = 3000;
     }
 
     // Onboarding chips are manual user clicks → tag as 'ui'
@@ -264,21 +275,24 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
         const quizProfile: UserProfile = {
           children: quizChildren,
           neighborhoods,
-          budget: pain === 'too_expensive' ? 'Free only' : 'Any budget',
-          specialNeeds: borough === 'other' && customArea ? `Area: ${customArea}` : undefined,
+          budget: pain === 'too_expensive' ? 'Бесплатно' : 'Любой бюджет',
+          specialNeeds: borough === 'other' && customArea ? `Район: ${customArea}` : undefined,
         };
         setProfile(quizProfile);
         storeProfile(quizProfile);
         setOnboardingDone(true);
         setOnboardingStep('done');
 
-        // Build welcome message summary data (reused for both branches below)
+        // Build welcome message summary data (reused for both branches below).
+        // Если ни один округ не выбран — показываем "Вся Москва".
         const boroughLabel = borough === 'other' && customArea
           ? customArea
-          : borough.charAt(0).toUpperCase() + borough.slice(1);
+          : neighborhoods.length > 0
+            ? neighborhoods.join(', ')
+            : 'Вся Москва';
         const childSummary = quizChildren.map(c => {
           const emoji = c.gender === 'girl' ? '\uD83D\uDC67' : c.gender === 'boy' ? '\uD83D\uDC66' : '\uD83E\uDDD2';
-          return `${emoji} ${c.age}yo`;
+          return `${emoji} ${c.age} лет`;
         }).join(' · ');
         const interestLabels = interests.map(i => i.replace(/_/g,' ')).map(i => i.charAt(0).toUpperCase() + i.slice(1));
 
@@ -337,11 +351,11 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
           onFiltersChange(finalFilters, 'ui');
 
           const broadenedNote = wasBroadened
-            ? `\n\nI loosened the category filter so you'd see more options in ${boroughLabel}. Tap "What" to narrow.`
+            ? `\n\nЯ ослабила фильтр категорий, чтобы в ${boroughLabel} было больше вариантов. Нажмите «Что», чтобы сузить.`
             : '';
           setMessages([{
             role: 'assistant',
-            content: `Great picks for your family! Here's what I found:\n\n${childSummary}\n\uD83D\uDCCD ${boroughLabel}\n\u2B50 ${interestLabels.join(', ')}\n\nI've filtered the best events for you. Feel free to ask me anything to refine!${broadenedNote}`,
+            content: `Отличные подборки для вашей семьи! Вот что я нашла:\n\n${childSummary}\n\uD83D\uDCCD ${boroughLabel}\n\u2B50 ${interestLabels.join(', ')}\n\nСобытия уже отфильтрованы. Спрашивайте что угодно, чтобы уточнить!${broadenedNote}`,
           }]);
 
           // Clean URL without reload
@@ -364,9 +378,9 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
         applyProfileFilters(stored);
         w.__pulseup_profile_filters_applied = true;
       }
-      setMessages([{ role: 'assistant', content: 'Welcome back! I remember your preferences. Ask me anything about events!' }]);
+      setMessages([{ role: 'assistant', content: 'С возвращением! Я помню ваши предпочтения. Спрашивайте что угодно про события!' }]);
     } else {
-      setMessages([{ role: 'assistant', content: "Hi! I'm your event assistant. Tell me about your children \u2014 their ages and how many. For example: \"daughter 6 and son 3\"" }]);
+      setMessages([{ role: 'assistant', content: "Привет! Я помощник по мероприятиям в Москве. Расскажите про ваших детей \u2014 возраст и сколько их. Например: \u00abдочка 6 и сын 3\u00bb" }]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -395,7 +409,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       if (children.length === 0) {
         setMessages((prev) => [...prev, {
           role: 'assistant',
-          content: "I couldn't understand that. Could you describe your children? For example: \"daughter 6 and son 3\"",
+          content: "Не поняла. Опишите, пожалуйста, ваших детей. Например: \u00abдочка 6 и сын 3\u00bb",
         }]);
         return;
       }
@@ -407,12 +421,12 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       setSelectedItems(new Set());
       setOnboardingStep('q2_interests');
       const child = children[0];
-      const label = child.name || `your ${child.age}-year-old`;
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Got it! What does ${label} enjoy?` }]);
+      const label = child.name || (child.gender === 'girl' ? `вашу ${child.age}-летнюю дочку` : child.gender === 'boy' ? `вашего ${child.age}-летнего сына` : `вашего ${child.age}-летнего ребёнка`);
+      setMessages((prev) => [...prev, { role: 'assistant', content: `Отлично! Что нравится ${label}?` }]);
     } catch {
       setMessages((prev) => [...prev, {
         role: 'assistant',
-        content: 'Sorry, something went wrong. Please try again \u2014 describe your children.',
+        content: 'Что-то пошло не так. Попробуйте ещё раз \u2014 расскажите про детей.',
       }]);
     } finally {
       setParsingChildren(false);
@@ -432,7 +446,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
     partialProfileRef.current = {};
     // Profile reset wipes filters too
     onFiltersChange({}, 'reset');
-    setMessages([{ role: 'assistant', content: "Hi! I'm your event assistant. Tell me about your children \u2014 their ages and how many. For example: \"daughter 6 and son 3\"" }]);
+    setMessages([{ role: 'assistant', content: "Привет! Я помощник по мероприятиям в Москве. Расскажите про ваших детей \u2014 возраст и сколько их. Например: \u00abдочка 6 и сын 3\u00bb" }]);
   }, [onFiltersChange]);
 
   // Handle multi-select toggle
@@ -440,10 +454,10 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
     setSelectedItems((prev) => {
       const next = new Set(prev);
       if (onboardingStep === 'q3_neighborhoods') {
-        if (item === 'Anywhere in NYC') {
+        if (item === 'Вся Москва') {
           return next.has(item) ? new Set() : new Set([item]);
         } else {
-          next.delete('Anywhere in NYC');
+          next.delete('Вся Москва');
           if (next.has(item)) next.delete(item);
           else next.add(item);
           return next;
@@ -472,13 +486,13 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       if (nextIdx < parsedChildren.length) {
         setCurrentChildIndex(nextIdx);
         const child = parsedChildren[nextIdx];
-        const label = child.name || `your ${child.age}-year-old`;
-        setMessages((prev) => [...prev, { role: 'assistant', content: `What does ${label} enjoy?` }]);
+        const label = child.name || (child.gender === 'girl' ? `вашей ${child.age}-летней дочке` : child.gender === 'boy' ? `вашему ${child.age}-летнему сыну` : `вашему ${child.age}-летнему ребёнку`);
+        setMessages((prev) => [...prev, { role: 'assistant', content: `Что нравится ${label}?` }]);
       } else {
         partialProfileRef.current.children = updatedChildren;
         applyProfileFilters(partialProfileRef.current);
         setOnboardingStep('q3_neighborhoods');
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Which neighborhoods are you interested in?' }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Какие округа Москвы вам интересны?' }]);
       }
     } else if (onboardingStep === 'q3_neighborhoods') {
       partialProfileRef.current.neighborhoods = selected;
@@ -486,7 +500,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: selected.join(', ') },
-        { role: 'assistant', content: 'Any budget preference?', quickReplies: BUDGET_OPTIONS },
+        { role: 'assistant', content: 'Какой у вас бюджет?', quickReplies: BUDGET_OPTIONS },
       ]);
       setSelectedItems(new Set());
       setOnboardingStep('q4_budget');
@@ -506,21 +520,21 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
   const buildFinalProfile = useCallback((): UserProfile => ({
     children: partialProfileRef.current.children || parsedChildren,
     neighborhoods: partialProfileRef.current.neighborhoods || [],
-    budget: partialProfileRef.current.budget || 'Any budget',
+    budget: partialProfileRef.current.budget || 'Любой бюджет',
     specialNeeds: partialProfileRef.current.specialNeeds,
   }), [parsedChildren]);
 
-  // Renders the "All set! Here's your profile…" summary and moves to `done`.
+  // Renders the "Готово! Вот ваш профиль…" summary and moves to `done`.
   // Split out of finishOnboarding so we can run it either straight after
   // q5_special (when email ask is suppressed) or after the q6_email step.
   const emitFinalSummary = useCallback((finalProfile: UserProfile) => {
     setOnboardingStep('done');
     const childrenDesc = finalProfile.children.map((c) =>
-      `${genderEmoji(c.gender)} ${c.name || `${c.age}yo`} \u2014 ${c.interests.join(', ')}`
+      `${genderEmoji(c.gender)} ${c.name || `${c.age} лет`} \u2014 ${c.interests.join(', ')}`
     ).join('\n');
     setMessages((prev) => [...prev, {
       role: 'assistant',
-      content: `All set! Here's your profile:\n\n${childrenDesc}\n\uD83D\uDCCD ${finalProfile.neighborhoods.length ? finalProfile.neighborhoods.join(', ') : 'Anywhere in NYC'}\n\uD83D\uDCB0 ${finalProfile.budget}${finalProfile.specialNeeds ? `\n\uD83D\uDCDD ${finalProfile.specialNeeds}` : ''}\n\nAsk me anything about events!`,
+      content: `Готово! Вот ваш профиль:\n\n${childrenDesc}\n\uD83D\uDCCD ${finalProfile.neighborhoods.length ? finalProfile.neighborhoods.join(', ') : 'Вся Москва'}\n\uD83D\uDCB0 ${finalProfile.budget}${finalProfile.specialNeeds ? `\n\uD83D\uDCDD ${finalProfile.specialNeeds}` : ''}\n\nСпрашивайте что угодно про события!`,
     }]);
   }, []);
 
@@ -551,12 +565,12 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
     const who = first?.name
       ? first.name
       : first
-        ? `your ${first.age}yo ${first.gender === 'girl' ? 'girl' : first.gender === 'boy' ? 'boy' : 'kid'}`
-        : 'your family';
-    const where = finalProfile.neighborhoods.length > 0 && !finalProfile.neighborhoods.includes('Anywhere in NYC')
+        ? `${first.gender === 'girl' ? 'вашей ' + first.age + '-летней дочки' : first.gender === 'boy' ? 'вашего ' + first.age + '-летнего сына' : 'вашего ' + first.age + '-летнего ребёнка'}`
+        : 'вашей семьи';
+    const where = finalProfile.neighborhoods.length > 0 && !finalProfile.neighborhoods.includes('Вся Москва')
       ? finalProfile.neighborhoods.join(', ')
-      : 'NYC';
-    const content = `One last thing \u2014 want me to email 10 fresh picks for ${who} every Thursday?\n\n\uD83D\uDCCD Matched to ${where} \u00B7 ${finalProfile.budget}\n\nUnsubscribe anytime.`;
+      : 'Москвы';
+    const content = `Последнее \u2014 присылать 10 свежих подборок для ${who} каждый четверг?\n\n\uD83D\uDCCD Подобрано под ${where} \u00B7 ${finalProfile.budget}\n\nОтписаться можно в любой момент.`;
 
     setOnboardingStep('q6_email');
     track('email_ask_shown', {
@@ -586,7 +600,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       });
       const data = await res.json().catch(() => ({ ok: false, error: 'Bad response' }));
       if (!res.ok || !data.ok) {
-        setEmailError(data.error || 'Could not save email, try again?');
+        setEmailError(data.error || 'Не удалось сохранить email. Попробовать ещё раз?');
         setEmailSubmitting(false);
         return;
       }
@@ -607,11 +621,11 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: email },
-        { role: 'assistant', content: '\u2728 Got it \u2014 your first picks land Thursday.' },
+        { role: 'assistant', content: '\u2728 Готово \u2014 первая подборка придёт в четверг.' },
       ]);
       emitFinalSummary(finalProfile);
     } catch (err) {
-      setEmailError('Network error, try again?');
+      setEmailError('Сетевая ошибка. Попробовать ещё раз?');
       trackError({
         type: 'email_subscribe_failed',
         message: err instanceof Error ? err.message : String(err),
@@ -637,7 +651,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       setMessages((prev) => [
         ...prev,
         { role: 'user', content: reply },
-        { role: 'assistant', content: 'Any special preferences? (allergies, accessibility, indoor/outdoor, etc.)', showSkip: true },
+        { role: 'assistant', content: 'Есть особые предпочтения? (аллергии, доступность, крытое/уличное и т.д.)', showSkip: true },
       ]);
       setOnboardingStep('q5_special');
     } else if (onboardingDone) {
@@ -719,7 +733,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       }
     } catch (err) {
       trackError({ type: 'chat_request_failed', message: err instanceof Error ? err.message : String(err) });
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Извините, что-то пошло не так. Попробуйте ещё раз.' }]);
     } finally {
       setLoading(false);
     }
@@ -740,7 +754,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
         selected: selectedItems,
         onToggle: handleToggle,
         onDone: handleMultiDone,
-        doneLabel: 'Done',
+        doneLabel: 'Готово',
       };
     }
     if (onboardingStep === 'q3_neighborhoods') {
@@ -749,7 +763,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
         selected: selectedItems,
         onToggle: handleToggle,
         onDone: handleMultiDone,
-        doneLabel: 'Done',
+        doneLabel: 'Готово',
       };
     }
     return null;
@@ -768,9 +782,9 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
 
   // Placeholder text
   const placeholder = useMemo(() => {
-    if (onboardingStep === 'q1_children') return 'e.g. "daughter 6 and son 3"';
-    if (onboardingStep === 'q5_special') return 'e.g. "no nuts, wheelchair accessible"';
-    if (onboardingDone) return 'Ask AI anything';
+    if (onboardingStep === 'q1_children') return 'например: «дочка 6 и сын 3»';
+    if (onboardingStep === 'q5_special') return 'например: «нет орехов, доступно для коляски»';
+    if (onboardingDone) return 'Спросите что угодно';
     return '';
   }, [onboardingStep, onboardingDone]);
 
