@@ -1,0 +1,43 @@
+{
+  "name": "pulseup-ru",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "reimport": "npx tsx scripts/import-csv.ts && node qa/scripts/data_tests.js",
+    "qa": "node qa/scripts/data_tests.js && node qa/scripts/e2e_tests.js && node qa/scripts/security_tests.js",
+    "qa:ci:quick": "npx tsx scripts/qa/ci.ts quick",
+    "qa:ci:full": "npx tsx scripts/qa/ci.ts full",
+    "qa:ci:smoke": "npx tsx scripts/qa/ci.ts smoke",
+    "qa:schema": "npx tsx scripts/qa/schema-check.ts",
+    "qa:tags": "npx tsx scripts/qa/tag-coverage.ts",
+    "qa:post-import": "npm run qa:schema && npm run qa:ci:quick && npm run qa:tags"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "csv-parse": "^6.2.1",
+    "dotenv": "^17.3.1",
+    "leaflet": "^1.9.4",
+    "next": "16.2.1",
+    "openai": "^6.32.0",
+    "posthog-js": "^1.369.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-leaflet": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

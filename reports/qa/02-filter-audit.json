@@ -1,0 +1,414 @@
+{
+  "scenarios": [
+    {
+      "id": "age-2",
+      "name": "Age 2",
+      "returned": 60,
+      "correct": 60,
+      "wrong_samples": [],
+      "gold_count": 61,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 98,
+      "verdict": "PASS"
+    },
+    {
+      "id": "age-4",
+      "name": "Age 4",
+      "returned": 93,
+      "correct": 93,
+      "wrong_samples": [],
+      "gold_count": 94,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "age-7",
+      "name": "Age 7",
+      "returned": 160,
+      "correct": 160,
+      "wrong_samples": [],
+      "gold_count": 161,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "age-10",
+      "name": "Age 10",
+      "returned": 159,
+      "correct": 159,
+      "wrong_samples": [],
+      "gold_count": 163,
+      "missed": 4,
+      "missed_samples": [
+        "#898 [2-10] Sunday Story Time: A Visit from My Paati’s Saris author Jyot",
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition",
+        "#1495 [2-10] Grandest Princess Ball Ever!"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 98,
+      "verdict": "PASS"
+    },
+    {
+      "id": "age-14",
+      "name": "Age 14",
+      "returned": 62,
+      "correct": 62,
+      "wrong_samples": [],
+      "gold_count": 63,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 98,
+      "verdict": "PASS"
+    },
+    {
+      "id": "age-gender-7g",
+      "name": "7yo girl",
+      "returned": 160,
+      "correct": 160,
+      "wrong_samples": [],
+      "gold_count": 161,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "age-gender-10b",
+      "name": "10yo boy",
+      "returned": 159,
+      "correct": 159,
+      "wrong_samples": [],
+      "gold_count": 163,
+      "missed": 4,
+      "missed_samples": [
+        "#898 [2-10] Sunday Story Time: A Visit from My Paati’s Saris author Jyot",
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition",
+        "#1495 [2-10] Grandest Princess Ball Ever!"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 98,
+      "verdict": "PASS"
+    },
+    {
+      "id": "multi-4-10",
+      "name": "Kids [4, 10]",
+      "returned": 176,
+      "correct": 176,
+      "wrong_samples": [],
+      "gold_count": 177,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "multi-2-7-12",
+      "name": "Kids [2, 7, 12]",
+      "returned": 180,
+      "correct": 180,
+      "wrong_samples": [],
+      "gold_count": 181,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "cat-arts",
+      "name": "Arts",
+      "returned": 38,
+      "correct": 38,
+      "wrong_samples": [],
+      "gold_count": 115,
+      "missed": 77,
+      "missed_samples": [
+        "#781 [3-12 free] Open Hours at Environmental Education Center",
+        "#812 [6-18] Jim Vines and Carl Mercurio Broadway Magic Hour",
+        "#838 [5-10 free] Recycled Ocean Crafts"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 33,
+      "verdict": "WARN"
+    },
+    {
+      "id": "cat-science",
+      "name": "Science",
+      "returned": 7,
+      "correct": 7,
+      "wrong_samples": [],
+      "gold_count": 20,
+      "missed": 13,
+      "missed_samples": [
+        "#895 [5-10 free] Kids Interactive Poetry",
+        "#1015 [3-12 free] Earth Day in Carl Schurz Park",
+        "#1077 [6-18] Coins & Conversation Pop Up Shop, Financial Literacy & Entre"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 35,
+      "verdict": "WARN"
+    },
+    {
+      "id": "cat-music",
+      "name": "Music",
+      "returned": 15,
+      "correct": 15,
+      "wrong_samples": [],
+      "gold_count": 42,
+      "missed": 27,
+      "missed_samples": [
+        "#884 [4-5] Toddies Act + Play (Toddies Crew)",
+        "#889 [0-12] Celebrate Holi",
+        "#895 [5-10 free] Kids Interactive Poetry"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 36,
+      "verdict": "WARN"
+    },
+    {
+      "id": "cat-outdoors",
+      "name": "Outdoors",
+      "returned": 52,
+      "correct": 52,
+      "wrong_samples": [],
+      "gold_count": 65,
+      "missed": 13,
+      "missed_samples": [
+        "#838 [5-10 free] Recycled Ocean Crafts",
+        "#892 [8-10] Animal Care Trainee",
+        "#974 [6-12 free] Big Umbrella Festival at Lincoln Center"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 80,
+      "verdict": "PASS"
+    },
+    {
+      "id": "cat-theater",
+      "name": "Theater",
+      "returned": 23,
+      "correct": 22,
+      "wrong_samples": [
+        "#548 [3-18] Parallel Exit presents the Sunset Circus"
+      ],
+      "gold_count": 141,
+      "missed": 119,
+      "missed_samples": [
+        "#658 [7-12 free] Video Games: The Great Connector",
+        "#737 [10-15] Watson Adventures’ Wizard School Scavenger Hunt",
+        "#780 [3-10] The Grandest Princess Ball Ever at Carmine’s"
+      ],
+      "correctness_pct": 96,
+      "coverage_pct": 16,
+      "verdict": "WARN"
+    },
+    {
+      "id": "cat-books",
+      "name": "Books",
+      "returned": 18,
+      "correct": 18,
+      "wrong_samples": [],
+      "gold_count": 41,
+      "missed": 23,
+      "missed_samples": [
+        "#658 [7-12 free] Video Games: The Great Connector",
+        "#812 [6-18] Jim Vines and Carl Mercurio Broadway Magic Hour",
+        "#815 [5-12 free] Jim Vines and Carl Mercurio announce Broadway Magic Hour Apr"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 44,
+      "verdict": "WARN"
+    },
+    {
+      "id": "loc-manhattan",
+      "name": "Manhattan",
+      "returned": 63,
+      "correct": 63,
+      "wrong_samples": [],
+      "gold_count": 84,
+      "missed": 21,
+      "missed_samples": [
+        "#815 [5-12 free] Jim Vines and Carl Mercurio announce Broadway Magic Hour Apr",
+        "#1044 [0-18 free] Kids Class! Ice Cream Sundae Decorating in Manhattan",
+        "#1065 [7-10 free] Book Launch: Found Sound"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 75,
+      "verdict": "WARN"
+    },
+    {
+      "id": "loc-brooklyn",
+      "name": "Brooklyn",
+      "returned": 42,
+      "correct": 42,
+      "wrong_samples": [],
+      "gold_count": 43,
+      "missed": 1,
+      "missed_samples": [
+        "#1068 [6-10 free] Sundae Ice-Cream Decorating for Kids - Brooklyn"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 98,
+      "verdict": "PASS"
+    },
+    {
+      "id": "loc-queens",
+      "name": "Queens",
+      "returned": 11,
+      "correct": 11,
+      "wrong_samples": [],
+      "gold_count": 12,
+      "missed": 1,
+      "missed_samples": [
+        "#1069 [5-12] Sundae Ice-Cream Decorating for Kids - Queens"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 92,
+      "verdict": "PASS"
+    },
+    {
+      "id": "loc-bronx",
+      "name": "Bronx",
+      "returned": 14,
+      "correct": 14,
+      "wrong_samples": [],
+      "gold_count": 14,
+      "missed": 0,
+      "missed_samples": [],
+      "correctness_pct": 100,
+      "coverage_pct": 100,
+      "verdict": "PASS"
+    },
+    {
+      "id": "price-free",
+      "name": "Free only",
+      "returned": 119,
+      "correct": 119,
+      "wrong_samples": [],
+      "gold_count": 120,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "price-u25",
+      "name": "Under $25",
+      "returned": 156,
+      "correct": 156,
+      "wrong_samples": [],
+      "gold_count": 169,
+      "missed": 13,
+      "missed_samples": [
+        "#812 [6-18] Jim Vines and Carl Mercurio Broadway Magic Hour",
+        "#896 [5-12] Hampton Ballet Theatre School Presents Sleeping Beauty",
+        "#1194 [12-17] Twelfth Night"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 92,
+      "verdict": "PASS"
+    },
+    {
+      "id": "price-u50",
+      "name": "Under $50",
+      "returned": 190,
+      "correct": 190,
+      "wrong_samples": [],
+      "gold_count": 191,
+      "missed": 1,
+      "missed_samples": [
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 99,
+      "verdict": "PASS"
+    },
+    {
+      "id": "combo-4-bk-free",
+      "name": "4yo + Brooklyn + free",
+      "returned": 18,
+      "correct": 18,
+      "wrong_samples": [],
+      "gold_count": 18,
+      "missed": 0,
+      "missed_samples": [],
+      "correctness_pct": 100,
+      "coverage_pct": 100,
+      "verdict": "PASS"
+    },
+    {
+      "id": "combo-7-sci-mh",
+      "name": "7yo + Science + Manhattan",
+      "returned": 2,
+      "correct": 2,
+      "wrong_samples": [],
+      "gold_count": 5,
+      "missed": 3,
+      "missed_samples": [
+        "#1015 [3-12 free] Earth Day in Carl Schurz Park",
+        "#1065 [7-10 free] Book Launch: Found Sound",
+        "#1294 [0-18 free] Ghana Tech Summit - 2026 AI Edition"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 40,
+      "verdict": "WARN"
+    },
+    {
+      "id": "combo-teen-bk",
+      "name": "Teen (14) + Brooklyn",
+      "returned": 10,
+      "correct": 10,
+      "wrong_samples": [],
+      "gold_count": 10,
+      "missed": 0,
+      "missed_samples": [],
+      "correctness_pct": 100,
+      "coverage_pct": 100,
+      "verdict": "PASS"
+    },
+    {
+      "id": "combo-5-arts-free",
+      "name": "5yo + Arts + free",
+      "returned": 23,
+      "correct": 23,
+      "wrong_samples": [],
+      "gold_count": 62,
+      "missed": 39,
+      "missed_samples": [
+        "#781 [3-12 free] Open Hours at Environmental Education Center",
+        "#838 [5-10 free] Recycled Ocean Crafts",
+        "#885 [0-12 free] Macy’s Flower Show"
+      ],
+      "correctness_pct": 100,
+      "coverage_pct": 37,
+      "verdict": "WARN"
+    }
+  ]
+}

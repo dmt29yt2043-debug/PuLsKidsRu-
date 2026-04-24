@@ -1,0 +1,163 @@
+{
+  "profile": {
+    "children": [
+      { "age": 6, "gender": "girl", "name": "Emma", "interests": ["Creative", "Shows"] },
+      { "age": 3, "gender": "boy", "name": "Leo", "interests": ["Outdoor", "Fun & Play"] }
+    ],
+    "neighborhoods": ["Midtown", "Upper Manhattan"],
+    "budget": "Under $50",
+    "specialNeeds": ""
+  },
+  "scenarios": [
+    {
+      "id": 1,
+      "category": "Weekend Planning",
+      "query": "What can we do this weekend?",
+      "expectedIntent": "Events happening this Saturday/Sunday, family-friendly"
+    },
+    {
+      "id": 2,
+      "category": "Weekend Planning",
+      "query": "Any free events tomorrow?",
+      "expectedIntent": "Free events on the next day, any category"
+    },
+    {
+      "id": 3,
+      "category": "Weekend Planning",
+      "query": "What's happening on Easter?",
+      "expectedIntent": "Easter/holiday/spring events around Easter date"
+    },
+    {
+      "id": 4,
+      "category": "Weekend Planning",
+      "query": "Activities for a rainy day?",
+      "expectedIntent": "Indoor activities, museums, theaters, workshops"
+    },
+    {
+      "id": 5,
+      "category": "Age-Specific",
+      "query": "My son is 3, what's good for him?",
+      "expectedIntent": "Events for ages 0-5, toddler-friendly"
+    },
+    {
+      "id": 6,
+      "category": "Age-Specific",
+      "query": "Theater for a 7-year-old girl",
+      "expectedIntent": "Theater/shows events, age-appropriate for 7yo"
+    },
+    {
+      "id": 7,
+      "category": "Age-Specific",
+      "query": "Something for a teenager, 13+",
+      "expectedIntent": "Events suitable for teens, not too childish"
+    },
+    {
+      "id": 8,
+      "category": "Age-Specific",
+      "query": "Baby-friendly activities for under 2",
+      "expectedIntent": "Infant/baby events, sensory play, baby storytime"
+    },
+    {
+      "id": 9,
+      "category": "Interest-Based",
+      "query": "Art classes for kids",
+      "expectedIntent": "Arts/creative workshops, painting, crafts"
+    },
+    {
+      "id": 10,
+      "category": "Interest-Based",
+      "query": "Outdoor activities in Brooklyn",
+      "expectedIntent": "Outdoor/park events in Brooklyn area"
+    },
+    {
+      "id": 11,
+      "category": "Interest-Based",
+      "query": "Science museums for kids",
+      "expectedIntent": "Science/educational museum events"
+    },
+    {
+      "id": 12,
+      "category": "Interest-Based",
+      "query": "Dance or music classes",
+      "expectedIntent": "Music/dance classes or performances"
+    },
+    {
+      "id": 13,
+      "category": "Interest-Based",
+      "query": "Sports activities for boys age 8",
+      "expectedIntent": "Sports events, age 8, physical activities"
+    },
+    {
+      "id": 14,
+      "category": "Budget-Conscious",
+      "query": "Free things to do with kids",
+      "expectedIntent": "Free events only, family-friendly"
+    },
+    {
+      "id": 15,
+      "category": "Budget-Conscious",
+      "query": "Activities under $20 per person",
+      "expectedIntent": "Events with price_max <= 20"
+    },
+    {
+      "id": 16,
+      "category": "Budget-Conscious",
+      "query": "Cheap weekend options for a family of 4",
+      "expectedIntent": "Budget-friendly weekend events, affordable"
+    },
+    {
+      "id": 17,
+      "category": "Location-Specific",
+      "query": "Events near Midtown Manhattan",
+      "expectedIntent": "Events in Midtown area geographically"
+    },
+    {
+      "id": 18,
+      "category": "Location-Specific",
+      "query": "What's happening in Brooklyn this week?",
+      "expectedIntent": "Brooklyn events, current week dates"
+    },
+    {
+      "id": 19,
+      "category": "Location-Specific",
+      "query": "Anything in the Bronx for kids?",
+      "expectedIntent": "Bronx-area family events"
+    },
+    {
+      "id": 20,
+      "category": "Specific Needs",
+      "query": "Wheelchair accessible activities",
+      "expectedIntent": "Events at wheelchair-accessible venues"
+    },
+    {
+      "id": 21,
+      "category": "Specific Needs",
+      "query": "Stroller-friendly events",
+      "expectedIntent": "Events at stroller-friendly venues"
+    },
+    {
+      "id": 22,
+      "category": "Specific Needs",
+      "query": "Bilingual Spanish events for kids",
+      "expectedIntent": "Spanish/bilingual programming for children"
+    },
+    {
+      "id": 23,
+      "category": "Discovery",
+      "query": "We're bored, suggest something fun",
+      "expectedIntent": "Diverse fun options, mix of categories"
+    },
+    {
+      "id": 24,
+      "category": "Discovery",
+      "query": "Best family experience in NYC right now",
+      "expectedIntent": "Top-rated or popular current events"
+    },
+    {
+      "id": 25,
+      "category": "Discovery",
+      "query": "Something educational but fun for kids",
+      "expectedIntent": "Educational events that are engaging (museums, STEM, workshops)"
+    }
+  ]
+}
