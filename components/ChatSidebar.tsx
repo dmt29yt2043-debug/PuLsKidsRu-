@@ -716,7 +716,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
       const data = await res.json();
       setMessages((prev) => [...prev, {
         role: 'assistant',
-        content: data.message || 'I found some events for you.',
+        content: data.message || 'Нашёл несколько подходящих событий.',
         events: data.events,
         filters: data.filters,
       }]);
@@ -868,7 +868,7 @@ export default function ChatSidebar({ filters, onFiltersChange, onEventClick }: 
           <div className="chat-mobile-backdrop" onClick={() => setMobileOpen(false)} />
           <div className="chat-mobile-panel">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(255,255,255,0.08)]">
-              <span className="font-semibold text-sm text-white">Pulse AI assistant</span>
+              <span className="font-semibold text-sm text-white">Pulse — помощник</span>
               <button
                 onClick={() => setMobileOpen(false)}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.06)]"

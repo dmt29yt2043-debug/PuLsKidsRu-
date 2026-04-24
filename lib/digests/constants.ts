@@ -11,35 +11,28 @@
 // `app/api/events/personalized/route.ts`.
 export const LIVE_STATUS_FILTER = `(status IN ('published', 'done', 'new') OR status LIKE '%.done')`;
 
-// ─── NYC geo ──────────────────────────────────────────────────────────────────
+// ─── Moscow geo ───────────────────────────────────────────────────────────────
 
-/** NYC counties → the borough they represent. Used for precise classification. */
-export const NYC_COUNTY_TO_BOROUGH: Record<string, string> = {
-  'new york county': 'manhattan',
-  'kings county':    'brooklyn',
-  'queens county':   'queens',
-  'bronx county':    'bronx',
-  'richmond county': 'staten island',
-};
+/** District labels (kept empty — city_district is not populated in the RU DB,
+ *  so this map is intentionally blank. Geo signal relies on bbox + city name). */
+export const CITY_DISTRICT_MAP: Record<string, string> = {};
 
-export const NYC_CITIES = new Set([
-  'new york',
-  'brooklyn',
-  'bronx',
-  'queens',
-  'staten island',
+/** Accept Moscow name variants (lower-cased, trimmed). */
+export const CITY_NAMES = new Set([
+  'москва',
+  'moscow',
 ]);
 
-/** All five boroughs bbox — generous edges to catch near-NYC venues. */
-export const NYC_BBOX = {
-  latMin: 40.49, latMax: 40.92,
-  lonMin: -74.27, lonMax: -73.70,
+/** Greater Moscow bbox — generous to catch near-city venues. */
+export const CITY_BBOX = {
+  latMin: 55.49, latMax: 55.97,
+  lonMin: 37.29, lonMax: 37.97,
 };
 
-/** Manhattan bbox only (tighter) — for Manhattan bonus. */
-export const MANHATTAN_BBOX = {
-  latMin: 40.70, latMax: 40.88,
-  lonMin: -74.02, lonMax: -73.91,
+/** Central district bbox (ЦАО) — for "центр города" bonus. */
+export const CENTER_BBOX = {
+  latMin: 55.720, latMax: 55.785,
+  lonMin: 37.555, lonMax: 37.685,
 };
 
 // ─── Format taxonomy (from data, 94% live coverage) ───────────────────────────
@@ -99,19 +92,22 @@ export const WORTH_IT_MOTIVATIONS = new Set([
 
 // ─── Indoor / outdoor text fallback (for the ~6% missing `format`) ───────────
 export const INDOOR_KEYWORDS = [
-  'museum', 'library', 'theater', 'theatre', 'gallery', 'exhibit',
-  'exhibition', 'auditorium', 'indoor', 'art center', 'arts center',
-  'performing arts', 'concert hall', 'opera', 'cinema', 'bookstore',
-  'science center', 'planetarium', 'aquarium',
-  'workshop', 'storytime', 'story time', 'classroom', 'studio',
-  'lecture', 'reading', 'screening', 'film', 'movie night',
-  'play space', 'playroom', 'indoor playground',
+  // English (kept for mixed content)
+  'museum', 'library', 'theater', 'theatre', 'gallery', 'exhibition',
+  'indoor', 'workshop', 'studio', 'lecture', 'screening',
+  // Russian
+  'музей', 'библиотек', 'театр', 'галере', 'выставк',
+  'мастер-класс', 'мастеркласс', 'студи', 'лекци', 'кинотеатр',
+  'филармони', 'концертн', 'опера', 'планетари', 'аквариум',
+  'закрыт', 'в помещени', 'в здани',
 ];
 
 export const OUTDOOR_KEYWORDS = [
-  'park', 'outdoor', 'outdoors', 'garden', 'playground', 'hike',
-  'hiking', 'farm', 'picnic', 'beach', 'open air', 'open-air',
-  'rooftop', 'trail', 'street fair', 'block party', 'parade',
+  'park', 'outdoor', 'garden', 'playground', 'picnic',
+  // Russian
+  'парк', 'улиц', 'на открытом', 'под открытым небом',
+  'прогулк', 'экскурси', 'набережн', 'сад ', 'сквер',
+  'пешеходн', 'на свежем',
 ];
 
 export const INDOOR_VENUE_TYPES = new Set([
@@ -119,55 +115,69 @@ export const INDOOR_VENUE_TYPES = new Set([
   'art center', 'arts center', 'indoor', 'opera', 'concert hall',
   'cinema', 'playroom', 'bookstore', 'science center',
   'planetarium', 'aquarium', 'studio',
+  // Russian
+  'музей', 'библиотека', 'театр', 'галерея', 'кинотеатр',
+  'концертный зал', 'планетарий', 'студия',
 ]);
 
 // ─── Family / kids text signals (fallback when motivation is missing) ─────────
 export const FAMILY_KEYWORDS = [
-  'kids', 'kid-friendly', 'children', 'family', 'family-friendly',
-  'toddler', 'teen', 'preschool', "children's", 'child',
+  'kids', 'children', 'family', 'toddler', 'teen', 'preschool', 'child',
+  // Russian
+  'дети', 'ребёнок', 'ребенок', 'детск', 'семейн', 'для детей',
+  'малыш', 'дошкольн', 'подростк', '0+', '3+', '6+', '12+',
 ];
 
 export const ADULT_ONLY_MARKERS = [
-  '21+', 'adults only', 'adult-only', 'bar crawl', 'wine tasting',
-  'bachelorette', 'speed dating',
+  '21+', '18+', 'adults only',
+  // Russian
+  'только для взрослых', 'строго 18+', 'строго 21+',
 ];
 
 // ─── Easy-plan text signals ───────────────────────────────────────────────────
 export const EASY_POSITIVE = [
-  'drop-in', 'drop in', 'no rsvp', 'no reservation', 'no ticket',
-  'no registration', 'free admission', 'open to the public', 'walk-in',
-  'included in admission', 'included with admission', 'no sign-up',
-  'everyone welcome', 'all ages welcome',
+  'drop-in', 'no rsvp', 'no registration', 'free admission', 'walk-in',
+  // Russian
+  'без регистрации', 'без предварительной', 'свободный вход',
+  'бесплатный вход', 'вход свободный',
 ];
 
 export const EASY_NEGATIVE = [
-  'sold out', 'limited seats', 'limited tickets', 'limited capacity',
-  'registration required', 'rsvp required', 'application', 'audition',
-  'must register', 'must rsvp', 'advance ticket', 'advance registration',
-  'by appointment',
+  'sold out', 'registration required', 'rsvp required', 'must register',
+  // Russian
+  'по предварительной записи', 'обязательная регистрация',
+  'мест нет', 'продано', 'необходима регистрация',
+  'требуется регистрация', 'по записи',
 ];
 
 // ─── Affordability / price text signals ───────────────────────────────────────
 export const AFFORDABLE_TEXT = [
-  'free', 'free admission', 'no charge', 'community', 'library',
-  'public', 'donation-based', 'pay what you wish', 'suggested donation',
-  'included in admission', 'included with admission', 'low-cost', 'low cost',
+  'free', 'free admission', 'donation', 'low-cost',
+  // Russian
+  'бесплатно', 'бесплатн', 'свободный вход', 'по донат',
+  'пожертвован', 'недорог',
 ];
 
 export const EXPENSIVE_MARKERS = [
-  'premium', 'vip', 'luxury', 'fine dining', 'black tie',
+  'premium', 'vip', 'luxury', 'black tie',
+  // Russian
+  'премиум', 'вип', 'люкс',
 ];
 
 // ─── Quality / engagement text signals ────────────────────────────────────────
 export const ENGAGEMENT_KEYWORDS = [
-  'hands-on', 'interactive', 'singalong', 'sing-along', 'sing along',
-  'workshop', 'make and take', 'make-and-take', 'build your own',
-  'live performance', 'live music', 'participatory', 'engaging',
-  'discover', 'explore', 'create', 'design your own',
+  'hands-on', 'interactive', 'workshop', 'live music', 'participatory',
+  'discover', 'explore', 'create',
+  // Russian
+  'интерактив', 'мастер-класс', 'живая музык', 'живое выступл',
+  'своими руками', 'создать', 'попробовать', 'эксперимент',
+  'иммерсив', 'вовлека',
 ];
 
 export const LOW_QUALITY_MARKERS = [
-  'placeholder', 'tbd', 'to be determined', 'tba', 'details coming soon',
+  'placeholder', 'tbd', 'tba',
+  // Russian
+  'уточняется', 'скоро', 'будет объявлено', 'в процессе',
 ];
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────

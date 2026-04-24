@@ -59,7 +59,7 @@ export default function BudgetFilter({
                 type="number"
                 value={priceMax}
                 onChange={(e) => setPriceMax(e.target.value)}
-                placeholder="Any"
+                placeholder="Любой"
                 min="0"
                 className="w-full px-3 py-2 border border-[rgba(255,255,255,0.1)] rounded-lg text-sm focus:outline-none focus:border-[#e91e63] bg-[#16143a] text-white placeholder-gray-500"
               />

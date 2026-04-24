@@ -16,12 +16,12 @@ const SLUG = 'weekend-kids-nyc';
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 101,
   slug: SLUG,
-  title: 'Top 10 Things to Do with Kids in NYC This Weekend',
-  subtitle: "Best picks for this weekend — so you don't have to scroll through everything.",
-  category: "Mom's Digest",
-  category_tag: 'WEEKEND',
+  title: 'Топ 10 идей с детьми в Москве на выходные',
+  subtitle: 'Лучшее на выходные — чтобы не листать всё подряд.',
+  category: 'Подборки редакции',
+  category_tag: 'ВЫХОДНЫЕ',
   curator_name: 'Pulse',
-  curator_role: 'Curated by PulseUp',
+  curator_role: 'Подборка от PulseUp',
   context_tags: JSON.stringify(['weekend', 'family', 'outdoor', 'indoor']),
 };
 

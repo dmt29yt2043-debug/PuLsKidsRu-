@@ -13,18 +13,18 @@ export function baseGeoAndCompleteness(ev: EnrichedEvent): { score: number; reas
   const reasons: string[] = [];
   let score = 0;
 
-  const nyc = classifyNYC(ev);
-  if (nyc.confidence > 0) {
-    const pts = Math.round(nyc.confidence * 30);
+  const city = classifyNYC(ev);
+  if (city.confidence > 0) {
+    const pts = Math.round(city.confidence * 30);
     score += pts;
-    if (pts >= 20) reasons.push(`NYC (${pts})`);
+    if (pts >= 20) reasons.push(`Москва (${pts})`);
   }
 
-  const manh = classifyManhattan(ev);
-  if (manh.confidence > 0) {
-    const pts = Math.round(manh.confidence * 10);
+  const center = classifyManhattan(ev);
+  if (center.confidence > 0) {
+    const pts = Math.round(center.confidence * 10);
     score += pts;
-    if (pts >= 5) reasons.push(`Manhattan (${pts})`);
+    if (pts >= 5) reasons.push(`центр (${pts})`);
   }
 
   const comp = classifyCompleteness(ev);

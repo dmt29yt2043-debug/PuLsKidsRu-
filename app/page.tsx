@@ -1083,7 +1083,7 @@ function HomeInner() {
                         type="button"
                         className="active-digest-banner__tag"
                         onClick={() => handleTagClick(activeDigest.category_tag!)}
-                        title={`See more ${activeDigest.category_tag} digests`}
+                        title={`Ещё подборок «${activeDigest.category_tag}»`}
                       >
                         {activeDigest.category_tag}
                       </button>
@@ -1106,7 +1106,7 @@ function HomeInner() {
               <button
                 className="active-digest-banner__clear"
                 onClick={handleDigestClear}
-                aria-label="Clear digest"
+                aria-label="Сбросить подборку"
               >
                 ✕ Закрыть
               </button>
@@ -1130,7 +1130,7 @@ function HomeInner() {
                   <button
                     className="digest-tag-peers__close"
                     onClick={() => setTagPeerPopover(null)}
-                    aria-label="Close"
+                    aria-label="Закрыть"
                   >✕</button>
                 </div>
                 {tagPeerPopover.digests.length === 0 ? (

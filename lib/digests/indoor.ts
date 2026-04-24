@@ -15,12 +15,12 @@ const SLUG = 'indoor-rainy-day';
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 102,
   slug: SLUG,
-  title: 'Top 10 Indoor Activities for Kids in NYC (Rainy Day Edition)',
-  subtitle: 'Great indoor options for days when the weather ruins the plan.',
-  category: "Mom's Digest",
-  category_tag: 'INDOOR',
+  title: 'Топ 10 идей в помещении для детей в Москве',
+  subtitle: 'Отличные варианты, когда погода не подводит планы.',
+  category: 'Подборки редакции',
+  category_tag: 'В ПОМЕЩЕНИИ',
   curator_name: 'Pulse',
-  curator_role: 'Curated by PulseUp',
+  curator_role: 'Подборка от PulseUp',
   context_tags: JSON.stringify(['indoor', 'family', 'rainy-day']),
 };
 

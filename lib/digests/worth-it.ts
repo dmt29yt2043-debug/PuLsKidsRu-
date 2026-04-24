@@ -16,20 +16,20 @@ const SLUG = 'kids-love-parents-approve';
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 105,
   slug: SLUG,
-  title: "10 Things Kids Love (And Parents Don't Regret)",
-  subtitle: 'Fun for kids, worth the time, and not painful for parents.',
-  category: "Mom's Digest",
-  category_tag: 'POPULAR',
+  title: '10 впечатлений, которые запомнятся детям',
+  subtitle: 'Весело детям и не мучительно родителям — стоит времени.',
+  category: 'Подборки редакции',
+  category_tag: 'ПОПУЛЯРНОЕ',
   curator_name: 'Pulse',
-  curator_role: 'Curated by PulseUp',
+  curator_role: 'Подборка от PulseUp',
   context_tags: JSON.stringify(['popular', 'worth-it', 'family']),
 };
 
 export function scoreWorthIt(ev: EnrichedEvent): ScoredEvent | null {
   const q = classifyQuality(ev);
-  // Hard gate: must have real reviews + strong rating
-  if (q.confidence < 0.5) return null;
-  if (ev.rating_count < THRESHOLDS.WORTH_IT_RATING_COUNT_MIN) return null;
+  // Softer gate for RU pool: ratings are absent across the dataset, so we
+  // score on family + engagement + completeness instead of requiring reviews.
+  if (q.confidence < 0.15) return null;
 
   const reasons: string[] = [];
   let score = 0;
@@ -66,8 +66,8 @@ export function getWorthItDigest(events: EnrichedEvent[]): DigestResult {
   const deduped = dedupe(scored);
   const { picks, strong, weak, skipped } = pickWithFallback(deduped, {
     target: 10,
-    strongFloor: 65,
-    weakFloor: 45,
+    strongFloor: 55,
+    weakFloor: 30,
     absoluteFloor: THRESHOLDS.ABSOLUTE_FLOOR,
   });
 

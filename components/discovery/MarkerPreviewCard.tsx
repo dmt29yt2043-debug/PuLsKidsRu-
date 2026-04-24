@@ -9,11 +9,11 @@ interface MarkerPreviewCardProps {
 }
 
 function formatPrice(event: Event): string {
-  if (event.is_free) return 'Free';
+  if (event.is_free) return 'Бесплатно';
   if (event.price_summary) return event.price_summary;
   if (event.price_min > 0 && event.price_max > 0) {
-    if (event.price_min === event.price_max) return `$${event.price_min}`;
-    return `$${event.price_min}-$${event.price_max}`;
+    if (event.price_min === event.price_max) return `${event.price_min} ₽`;
+    return `${event.price_min}–${event.price_max} ₽`;
   }
   return '';
 }
@@ -51,7 +51,7 @@ export default function MarkerPreviewCard({ event, onViewDetails }: MarkerPrevie
           )}
         </div>
         <button className="marker-preview-btn" onClick={onViewDetails}>
-          View details
+          Подробнее
         </button>
       </div>
     </div>
@@ -86,7 +86,7 @@ export function renderMarkerPreviewHTML(event: Event): string {
           class="marker-preview-details-btn"
           style="width:100%;padding:6px 0;background:#e91e63;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;"
         >
-          View details
+          Подробнее
         </button>
       </div>
     </div>

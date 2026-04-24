@@ -7,7 +7,7 @@ function formatDate(dateStr: string): string {
   if (!dateStr) return '';
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('ru-RU', { weekday: 'short', month: 'short', day: 'numeric' });
   } catch {
     return dateStr;
   }
@@ -56,7 +56,7 @@ export default function FavoritesPanel({ open, onClose, onEventClick }: Favorite
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
             <span style={{ color: 'white', fontWeight: 600, fontSize: 16 }}>
-              Saved ({favoriteEvents.length})
+              Сохранённые ({favoriteEvents.length})
             </span>
           </div>
           <button
@@ -75,8 +75,8 @@ export default function FavoritesPanel({ open, onClose, onEventClick }: Favorite
           {favoriteEvents.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#6b7280', marginTop: 60 }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>♡</div>
-              <p style={{ fontSize: 14 }}>No saved events yet</p>
-              <p style={{ fontSize: 12, marginTop: 4 }}>Tap the heart on any event to save it</p>
+              <p style={{ fontSize: 14 }}>Пока ничего не сохранено</p>
+              <p style={{ fontSize: 12, marginTop: 4 }}>Нажмите сердечко, чтобы сохранить событие</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -118,7 +118,7 @@ export default function FavoritesPanel({ open, onClose, onEventClick }: Favorite
                       background: event.is_free ? '#10b981' : '#e91e63',
                       color: 'white',
                     }}>
-                      {event.is_free ? 'FREE' : event.price_min > 0 ? `$${event.price_min}` : event.price_summary || ''}
+                      {event.is_free ? 'БЕСПЛАТНО' : event.price_min > 0 ? `${event.price_min} ₽` : event.price_summary || ''}
                     </span>
                   </div>
 

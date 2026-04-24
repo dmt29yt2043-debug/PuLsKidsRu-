@@ -15,7 +15,7 @@
 
 import type { EnrichedEvent, Signal } from './types';
 import {
-  NYC_COUNTY_TO_BOROUGH, NYC_CITIES, NYC_BBOX, MANHATTAN_BBOX,
+  CITY_NAMES, CITY_BBOX, CENTER_BBOX,
   INDOOR_FORMATS, OUTDOOR_FORMATS, MIXED_FORMATS, ADULT_FORMATS, EASY_FORMATS,
   FAMILY_MOTIVATIONS, WORTH_IT_MOTIVATIONS,
   INDOOR_KEYWORDS, OUTDOOR_KEYWORDS, INDOOR_VENUE_TYPES,
@@ -29,66 +29,55 @@ import {
   countKeywordHits, matchedKeywords, anyInSet, countInSet,
 } from './event-parser';
 
-// ─── Geo: NYC + Manhattan ────────────────────────────────────────────────────
+// ─── Geo: Moscow + Center ────────────────────────────────────────────────────
 
 /**
- * Returns {is_nyc, confidence, reasons}. Confidence 1.0 when both county AND
- * city AND bbox agree; lower if only one signal present.
+ * Returns {confidence, reasons}. Confidence 1.0 when city=Москва AND bbox agree.
+ * Kept function name `classifyNYC` export alias below for backwards-compat.
  */
-export function classifyNYC(ev: EnrichedEvent): Signal & { borough: string | null } {
+export function classifyCity(ev: EnrichedEvent): Signal & { borough: string | null } {
   const reasons: string[] = [];
   let confidence = 0;
-  let borough: string | null = null;
+  const borough: string | null = null;
 
-  // Signal A: country_county (most reliable)
-  const county = (ev.country_county || '').toLowerCase().trim();
-  if (county && NYC_COUNTY_TO_BOROUGH[county]) {
-    confidence += 0.5;
-    borough = NYC_COUNTY_TO_BOROUGH[county];
-    reasons.push(`county=${county}`);
-  }
-
-  // Signal B: city (medium reliability — some non-NYC events say city='New York')
+  // Signal A: city name match
   const city = (ev.city || '').toLowerCase().trim();
-  if (NYC_CITIES.has(city)) {
-    confidence += 0.3;
-    if (!borough) borough = city === 'new york' ? 'manhattan' : city;
+  if (CITY_NAMES.has(city)) {
+    confidence += 0.6;
     reasons.push(`city=${city}`);
   }
 
-  // Signal C: bbox fallback
+  // Signal B: bbox fallback (greater Moscow)
   if (ev.lat != null && ev.lon != null) {
-    const b = NYC_BBOX;
+    const b = CITY_BBOX;
     if (ev.lat >= b.latMin && ev.lat <= b.latMax && ev.lon >= b.lonMin && ev.lon <= b.lonMax) {
-      confidence += 0.2;
-      reasons.push('in NYC bbox');
+      confidence += 0.4;
+      reasons.push('в границах Москвы');
     }
   }
 
   return { confidence: Math.min(1, confidence), reasons, borough };
 }
 
-export function classifyManhattan(ev: EnrichedEvent): Signal {
+/** Central district (ЦАО) bonus. */
+export function classifyCenter(ev: EnrichedEvent): Signal {
   const reasons: string[] = [];
   let confidence = 0;
 
-  const county = (ev.country_county || '').toLowerCase().trim();
-  if (county === 'new york county') {
-    confidence += 0.7;
-    reasons.push('New York County');
-  }
-
   if (ev.lat != null && ev.lon != null) {
-    const b = MANHATTAN_BBOX;
+    const b = CENTER_BBOX;
     if (ev.lat >= b.latMin && ev.lat <= b.latMax && ev.lon >= b.lonMin && ev.lon <= b.lonMax) {
-      confidence += 0.3;
-      reasons.push('in Manhattan bbox');
+      confidence += 1.0;
+      reasons.push('центр Москвы (ЦАО)');
     }
   }
 
-  // City alone is too noisy — skip it.
   return { confidence: Math.min(1, confidence), reasons };
 }
+
+// Backwards-compat aliases used elsewhere in the codebase
+export const classifyNYC = classifyCity;
+export const classifyManhattan = classifyCenter;
 
 // ─── Indoor / outdoor ────────────────────────────────────────────────────────
 
@@ -305,7 +294,7 @@ export function classifyAffordable(ev: EnrichedEvent): Signal {
 
 /**
  * True if ev.next_start_at (or any occurrence) falls on Sat/Sun within the
- * lookahead window. Weekend is defined in America/New_York timezone.
+ * lookahead window. Weekend is defined in Europe/Moscow timezone.
  */
 export function classifyWeekend(
   ev: EnrichedEvent,
@@ -326,10 +315,10 @@ export function classifyWeekend(
     const ms = Date.parse(iso);
     if (!Number.isFinite(ms)) continue;
     if (ms < nowMs || ms > cutoff) continue;
-    const dow = dayOfWeekNY(iso);
+    const dow = dayOfWeekMsk(iso);
     if (dow === 0 || dow === 6) {
       bestMatch = iso;
-      const dayName = dow === 6 ? 'Saturday' : 'Sunday';
+      const dayName = dow === 6 ? 'суббота' : 'воскресенье';
       reasons.push(`${dayName} ${iso.slice(0, 10)}`);
       break;
     }
@@ -342,15 +331,13 @@ export function classifyWeekend(
   };
 }
 
-/** Day of week in America/New_York (0=Sun..6=Sat). */
-function dayOfWeekNY(iso: string): number {
+/** Day of week in Europe/Moscow (0=Sun..6=Sat). */
+function dayOfWeekMsk(iso: string): number {
   const d = new Date(iso);
-  // toLocaleString with timeZone gives us the NY-local date
   const parts = d.toLocaleDateString('en-US', {
-    timeZone: 'America/New_York',
+    timeZone: 'Europe/Moscow',
     year: 'numeric', month: '2-digit', day: '2-digit',
   });
-  // parts is "MM/DD/YYYY"; Date parses that as UTC-naive → use Date.UTC
   const [m, dd, y] = parts.split('/').map((p) => parseInt(p, 10));
   return new Date(Date.UTC(y, m - 1, dd)).getUTCDay();
 }

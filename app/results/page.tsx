@@ -30,7 +30,7 @@ function ResultsRedirect() {
       justifyContent: 'center',
       fontSize: 14,
     }}>
-      Loading your personalized feed…
+      Загружаем вашу персональную ленту…
     </div>
   );
 }

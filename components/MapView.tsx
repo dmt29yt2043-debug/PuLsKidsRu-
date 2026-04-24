@@ -77,8 +77,8 @@ function createMarkerIcon(state: 'default' | 'hovered' | 'selected', priceText?:
 }
 
 function getPriceText(event: Event): string {
-  if (event.is_free) return 'Free';
-  if (event.price_min > 0) return `$${event.price_min}`;
+  if (event.is_free) return 'Бесплатно';
+  if (event.price_min > 0) return `${event.price_min} ₽`;
   return '';
 }
 
@@ -107,8 +107,8 @@ function MapViewInner({
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [40.7580, -73.9855], // Midtown Manhattan
-      zoom: 13,
+      center: [55.7558, 37.6173], // Центр Москвы
+      zoom: 11,
       zoomControl: true,
     });
 
@@ -236,22 +236,22 @@ function MapViewInner({
       markersRef.current.set(event.id, marker);
     });
 
-    // Fit bounds to NYC-area events only, or default to NYC center
+    // Fit bounds to Moscow-area events only, or default to Moscow center
     if (eventsWithCoords.length > 0 && !initialBoundsSetRef.current) {
-      // Filter to NYC area events only (roughly within 50km of Manhattan)
-      const nycEvents = eventsWithCoords.filter(
-        (e) => e.lat! > 40.4 && e.lat! < 41.0 && e.lon! > -74.3 && e.lon! < -73.6
+      // Filter to Moscow area events only (roughly within 50km of Kremlin)
+      const mskEvents = eventsWithCoords.filter(
+        (e) => e.lat! > 55.4 && e.lat! < 56.1 && e.lon! > 36.9 && e.lon! < 38.0
       );
-      if (nycEvents.length > 0) {
+      if (mskEvents.length > 0) {
         const bounds = L.latLngBounds(
-          nycEvents.map((e) => [e.lat!, e.lon!] as L.LatLngTuple)
+          mskEvents.map((e) => [e.lat!, e.lon!] as L.LatLngTuple)
         );
         programmaticMoveRef.current = true;
-        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
       } else {
-        // Fallback: zoom to NYC center
+        // Fallback: zoom to Moscow center
         programmaticMoveRef.current = true;
-        map.setView([40.7128, -74.006], 12);
+        map.setView([55.7558, 37.6173], 11);
       }
       initialBoundsSetRef.current = true;
     }

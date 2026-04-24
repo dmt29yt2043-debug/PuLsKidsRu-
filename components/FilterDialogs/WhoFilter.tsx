@@ -64,7 +64,7 @@ export default function WhoFilter({ ageMax: initialAge, children: initialChildre
                 <button
                   onClick={() => removeChild(i)}
                   className="text-gray-500 hover:text-red-400 text-lg leading-none"
-                  title="Remove"
+                  title="Удалить"
                 >
                   ✕
                 </button>

@@ -15,12 +15,12 @@ const SLUG = 'easy-no-planning';
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 103,
   slug: SLUG,
-  title: '10 Easy Things to Do with Kids in NYC (No Planning Needed)',
-  subtitle: 'Low-effort plans that are simple, easy, and actually work.',
-  category: "Mom's Digest",
-  category_tag: 'EASY',
+  title: '10 простых идей с детьми в Москве (без планирования)',
+  subtitle: 'Лёгкие планы без регистраций и квестов — собрались и пошли.',
+  category: 'Подборки редакции',
+  category_tag: 'ПРОСТО',
   curator_name: 'Pulse',
-  curator_role: 'Curated by PulseUp',
+  curator_role: 'Подборка от PulseUp',
   context_tags: JSON.stringify(['easy', 'family', 'no-planning']),
 };
 

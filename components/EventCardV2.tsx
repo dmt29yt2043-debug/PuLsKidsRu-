@@ -131,7 +131,7 @@ export default function EventCardV2({
       )}
 
       {/* ── Heart ── */}
-      <button className="event-card-v2-fav" onClick={handleLike} aria-label="Save">
+      <button className="event-card-v2-fav" onClick={handleLike} aria-label="Сохранить">
         <svg width="15" height="15" viewBox="0 0 24 24"
           fill={liked ? '#e91e63' : 'none'}
           stroke={liked ? '#e91e63' : 'white'}

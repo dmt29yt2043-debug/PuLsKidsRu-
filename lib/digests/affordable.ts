@@ -15,12 +15,12 @@ const SLUG = 'free-affordable';
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 104,
   slug: SLUG,
-  title: 'Top 15 Free & Affordable Things to Do with Kids in NYC',
-  subtitle: "Good family plans that won't turn into a $100 outing.",
-  category: "Mom's Digest",
-  category_tag: 'BUDGET',
+  title: 'Топ 15 бесплатных и недорогих идей с детьми в Москве',
+  subtitle: 'Семейные планы, которые не превратятся в трату на 5000 ₽.',
+  category: 'Подборки редакции',
+  category_tag: 'БЮДЖЕТНО',
   curator_name: 'Pulse',
-  curator_role: 'Curated by PulseUp',
+  curator_role: 'Подборка от PulseUp',
   context_tags: JSON.stringify(['free', 'budget', 'family']),
 };
 

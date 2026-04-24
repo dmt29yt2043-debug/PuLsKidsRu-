@@ -12,7 +12,7 @@ import { ImageResponse } from 'next/og';
 import fs from 'fs';
 import path from 'path';
 
-export const alt = 'PulseUp — Better Moments with your Kids. Less Planning';
+export const alt = 'PulseUp — Больше впечатлений с детьми. Меньше поиска';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -72,7 +72,7 @@ export default async function OGImage() {
             maxWidth: 1000,
           }}
         >
-          Better Moments with your Kids.
+          Больше впечатлений с детьми.
         </div>
         <div
           style={{
@@ -85,7 +85,7 @@ export default async function OGImage() {
             marginTop: 8,
           }}
         >
-          Less Planning.
+          Меньше поиска.
         </div>
       </div>
     ),

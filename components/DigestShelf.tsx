@@ -46,8 +46,8 @@ export default function DigestShelf({ onDigestSelect, activeDigestSlug }: Digest
       <div className="digest-shelf-header">
         <div className="digest-shelf-title-row">
           <div>
-            <h2 className="digest-shelf-title">Mom&apos;s Digest</h2>
-            <p className="digest-shelf-sub">Curated collections for your lifestyle.</p>
+            <h2 className="digest-shelf-title">Подборки редакции</h2>
+            <p className="digest-shelf-sub">Готовые подборки под ваш ритм жизни.</p>
           </div>
         </div>
       </div>

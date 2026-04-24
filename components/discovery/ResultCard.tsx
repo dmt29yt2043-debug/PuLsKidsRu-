@@ -16,7 +16,7 @@ function formatDate(dateStr: string): string {
   if (!dateStr) return '';
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('ru-RU', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -27,13 +27,13 @@ function formatDate(dateStr: string): string {
 }
 
 function formatPrice(event: Event): { text: string; color: string } {
-  if (event.is_free) return { text: 'Free', color: '#22c55e' };
+  if (event.is_free) return { text: 'Бесплатно', color: '#22c55e' };
   if (event.price_summary) return { text: event.price_summary, color: '#374151' };
   if (event.price_min > 0 && event.price_max > 0) {
     if (event.price_min === event.price_max) {
-      return { text: `$${event.price_min}`, color: '#374151' };
+      return { text: `${event.price_min} ₽`, color: '#374151' };
     }
-    return { text: `$${event.price_min}-$${event.price_max}`, color: '#374151' };
+    return { text: `${event.price_min}–${event.price_max} ₽`, color: '#374151' };
   }
   return { text: '', color: '#374151' };
 }

@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import type { ChatMessage, ChildProfile, Event } from '@/lib/types';
 
 const THINKING_STEPS = [
-  'Understanding your request\u2026',
-  'Searching the event database\u2026',
-  'Matching your preferences\u2026',
-  'Picking the best options\u2026',
+  'Разбираю запрос\u2026',
+  'Ищу в базе событий\u2026',
+  'Подбираю под ваши интересы\u2026',
+  'Выбираю лучшие варианты\u2026',
 ];
 
 function ThinkingIndicator() {
@@ -52,9 +52,24 @@ function genderEmoji(gender: string): string {
   return gender === 'girl' ? '\uD83D\uDC67' : gender === 'boy' ? '\uD83D\uDC66' : '\uD83E\uDDD2';
 }
 
+function pluralYears(n: number): string {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return 'год';
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return 'года';
+  return 'лет';
+}
+
 const INTEREST_EMOJIS: Record<string, string> = {
-  'Active': '\u26BD', 'Creative': '\uD83C\uDFA8', 'Educational': '\uD83D\uDCDA', 'Shows': '\uD83C\uDFAD',
-  'Outdoor': '\uD83C\uDF33', 'Fun & Play': '\uD83C\uDFAE', 'Adventure': '\uD83C\uDFD4\uFE0F', 'Books': '\uD83D\uDCD6', 'Social': '\uD83D\uDC6B',
+  // Russian labels — MUST match INTEREST_OPTIONS in ChatSidebar.tsx.
+  'Активные':     '\u26BD',
+  'Творческие':   '\uD83C\uDFA8',
+  'Развивающие':  '\uD83D\uDCDA',
+  'Шоу':          '\uD83C\uDFAD',
+  'На улице':     '\uD83C\uDF33',
+  'Игры':         '\uD83C\uDFAE',
+  'Приключения':  '\uD83C\uDFD4\uFE0F',
+  'Книги':        '\uD83D\uDCD6',
+  'Общение':      '\uD83D\uDC6B',
 };
 
 function ChildSummaryBlock({ children }: { children: ChildProfile[] }) {
@@ -64,7 +79,7 @@ function ChildSummaryBlock({ children }: { children: ChildProfile[] }) {
         <div key={i} className="flex items-center gap-2 py-1">
           <span className="text-lg">{genderEmoji(child.gender)}</span>
           <span className="text-sm font-medium text-white">
-            {child.name || `Child ${i + 1}`}, {child.age}yo
+            {child.name || `Ребёнок ${i + 1}`}, {child.age} {pluralYears(child.age)}
           </span>
         </div>
       ))}
@@ -80,7 +95,7 @@ function InterestSummaryBlock({ children }: { children: ChildProfile[] }) {
           <div className="flex items-center gap-1.5">
             <span className="text-lg">{genderEmoji(child.gender)}</span>
             <span className="text-xs font-semibold text-gray-300">
-              {child.name || `${child.age}yo`}
+              {child.name || `${child.age} ${pluralYears(child.age)}`}
             </span>
           </div>
           <div className="flex flex-wrap gap-1 mt-1 ml-7">
@@ -148,7 +163,7 @@ function EmailAskBlock({ state }: { state: EmailAskState }) {
           className="px-3 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-opacity whitespace-nowrap"
           style={{ backgroundColor: '#e91e63' }}
         >
-          {state.submitting ? '…' : 'Send weekly'}
+          {state.submitting ? '…' : 'Подписаться'}
         </button>
       </div>
       {state.error && (
@@ -160,7 +175,7 @@ function EmailAskBlock({ state }: { state: EmailAskState }) {
         disabled={state.submitting}
         className="skip-btn"
       >
-        Not now, thanks
+        Не сейчас
       </button>
     </div>
   );
@@ -249,7 +264,7 @@ export default function ChatMessages({
                   disabled={multiSelectState.selected.size === 0}
                   className="onboarding-done-btn mt-2"
                 >
-                  {multiSelectState.doneLabel || 'Done'}
+                  {multiSelectState.doneLabel || 'Готово'}
                 </button>
               </div>
             )}
@@ -257,7 +272,7 @@ export default function ChatMessages({
             {/* Skip button */}
             {msg.role === 'assistant' && isLast && msg.showSkip && onSkip && (
               <div className="mt-2">
-                <button onClick={onSkip} className="skip-btn">Skip</button>
+                <button onClick={onSkip} className="skip-btn">Пропустить</button>
               </div>
             )}
 
