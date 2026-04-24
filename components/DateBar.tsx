@@ -12,8 +12,8 @@ interface DateBarProps {
 /** Number of days to show ahead */
 const DAYS_AHEAD = 28;
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_NAMES = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const MONTH_NAMES = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 
 function fmt(d: Date): string {
   const y = d.getFullYear();
@@ -76,7 +76,7 @@ export default function DateBar({ selectedDate, onSelect }: DateBarProps) {
                   d.isWeekend && !isActive ? 'weekend' : '',
                 ].filter(Boolean).join(' ')}
                 onClick={() => onSelect(isActive ? undefined : d.key)}
-                title={d.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                title={d.date.toLocaleDateString('ru-RU', { weekday: 'long', month: 'long', day: 'numeric' })}
               >
                 <span className="datebar-day">{d.date.getDate()}</span>
                 <span className="datebar-dow">{DAY_NAMES[d.date.getDay()]}</span>

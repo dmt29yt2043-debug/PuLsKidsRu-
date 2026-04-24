@@ -16,8 +16,8 @@ interface WhoFilterProps {
 }
 
 const GENDER_LABELS: Record<Child['gender'], string> = {
-  boy: '👦 Boy',
-  girl: '👧 Girl',
+  boy: '👦 Мальчик',
+  girl: '👧 Девочка',
 };
 
 export default function WhoFilter({ ageMax: initialAge, children: initialChildren, onApply, onRemember, onClose }: WhoFilterProps) {
@@ -53,14 +53,14 @@ export default function WhoFilter({ ageMax: initialAge, children: initialChildre
   return (
     <div className="filter-dialog-backdrop" onClick={onClose}>
       <div className="filter-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-        <h3 className="text-lg font-semibold mb-4 text-white">Who is going?</h3>
+        <h3 className="text-lg font-semibold mb-4 text-white">Кто идёт?</h3>
 
         {/* Children list */}
         <div className="space-y-3 mb-4">
           {children.map((child, i) => (
             <div key={i} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '12px 14px' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-300 font-medium">Child {i + 1}</span>
+                <span className="text-sm text-gray-300 font-medium">Ребёнок {i + 1}</span>
                 <button
                   onClick={() => removeChild(i)}
                   className="text-gray-500 hover:text-red-400 text-lg leading-none"
@@ -72,7 +72,7 @@ export default function WhoFilter({ ageMax: initialAge, children: initialChildre
 
               {/* Age stepper */}
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-xs text-gray-500 w-8">Age</span>
+                <span className="text-xs text-gray-500 w-8">Лет</span>
                 <button
                   onClick={() => updateAge(i, -1)}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white"
@@ -117,11 +117,11 @@ export default function WhoFilter({ ageMax: initialAge, children: initialChildre
           className="w-full py-2 mb-5 rounded-lg text-sm font-medium text-pink-400 hover:text-white transition-colors"
           style={{ border: '1.5px dashed rgba(233,30,99,0.5)', background: 'transparent' }}
         >
-          + Add child
+          + Добавить ребёнка
         </button>
 
         {children.length === 0 && (
-          <p className="text-xs text-gray-500 mb-4 text-center">Add children to filter events by age</p>
+          <p className="text-xs text-gray-500 mb-4 text-center">Добавьте детей для фильтрации по возрасту</p>
         )}
 
         <div className="flex gap-3">
@@ -129,14 +129,14 @@ export default function WhoFilter({ ageMax: initialAge, children: initialChildre
             onClick={handleClear}
             className="flex-1 py-2 px-4 rounded-lg border border-[rgba(255,255,255,0.15)] text-sm font-medium text-gray-400 hover:bg-[rgba(255,255,255,0.05)]"
           >
-            Clear
+            Сбросить
           </button>
           <button
             onClick={() => { handleApply(); if (children.length > 0) onRemember(children); }}
             className="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white"
             style={{ backgroundColor: '#e91e63' }}
           >
-            Apply
+            Применить
           </button>
         </div>
       </div>

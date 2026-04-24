@@ -33,7 +33,7 @@ function formatDateShort(dateStr: string): string {
   if (!dateStr) return '—';
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric', year: 'numeric' });
   } catch {
     return dateStr;
   }
@@ -47,34 +47,34 @@ function formatDateShort(dateStr: string): string {
  * - Already started & ongoing  → "Now – Dec 31"  (if start is in the past)
  */
 function formatDateSmart(startStr: string, endStr?: string | null): { label: string; value: string } {
-  if (!startStr) return { label: 'DATE', value: '—' };
+  if (!startStr) return { label: 'ДАТА', value: '—' };
   try {
     const start = new Date(startStr);
     const now = new Date();
-    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const fmtFull = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+    const fmtFull = (d: Date) => d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    if (!endStr) return { label: 'DATE', value: fmtFull(start) };
+    if (!endStr) return { label: 'ДАТА', value: fmtFull(start) };
 
     const end = new Date(endStr);
     const diffDays = Math.round((end.getTime() - start.getTime()) / 86_400_000);
 
     // Same day event
-    if (diffDays <= 0) return { label: 'DATE', value: fmtFull(start) };
+    if (diffDays <= 0) return { label: 'ДАТА', value: fmtFull(start) };
 
     // Short run (≤7 days)
     if (diffDays <= 7) {
-      return { label: 'DATES', value: `${fmt(start)} – ${fmt(end)}` };
+      return { label: 'ДАТЫ', value: `${fmt(start)} – ${fmt(end)}` };
     }
 
     // Long-running: show availability window
     const started = start.getTime() < now.getTime();
     if (started) {
-      return { label: 'AVAILABLE', value: `Now – ${fmt(end)}` };
+      return { label: 'ДОСТУПНО', value: `Сейчас – ${fmt(end)}` };
     }
-    return { label: 'DATES', value: `${fmt(start)} – ${fmt(end)}` };
+    return { label: 'ДАТЫ', value: `${fmt(start)} – ${fmt(end)}` };
   } catch {
-    return { label: 'DATE', value: startStr };
+    return { label: 'ДАТА', value: startStr };
   }
 }
 
@@ -83,33 +83,33 @@ function formatTime(dateStr: string): string {
   try {
     const d = new Date(dateStr);
     const h = d.getHours();
-    if (h === 0 && d.getMinutes() === 0) return 'All day';
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (h === 0 && d.getMinutes() === 0) return 'Весь день';
+    return d.toLocaleTimeString('ru-RU', { hour: 'numeric', minute: '2-digit' });
   } catch {
     return '—';
   }
 }
 
 function priceLabel(event: Event): string {
-  if (event.is_free) return 'Free';
-  // Extract all dollar amounts from price_summary to build a clean range
+  if (event.is_free) return 'Бесплатно';
+  // Extract ruble or dollar amounts from price_summary to build a clean range
   if (event.price_summary) {
-    const amounts = [...event.price_summary.matchAll(/\$[\d,]+(?:\.\d{1,2})?/g)]
-      .map((m) => parseFloat(m[0].replace(/[$,]/g, '')))
+    const rubleAmounts = [...event.price_summary.matchAll(/(\d[\d\s]*)\s*(?:руб|₽)/gi)]
+      .map((m) => parseFloat(m[1].replace(/\s/g, '')))
       .filter((n) => n > 0);
-    if (amounts.length >= 2) {
-      const lo = Math.min(...amounts);
-      const hi = Math.max(...amounts);
-      if (lo === hi) return `$${lo}`;
-      return `$${lo}–$${hi.toLocaleString()}`;
+    if (rubleAmounts.length >= 2) {
+      const lo = Math.min(...rubleAmounts);
+      const hi = Math.max(...rubleAmounts);
+      if (lo === hi) return `${lo} ₽`;
+      return `${lo}–${hi.toLocaleString('ru-RU')} ₽`;
     }
-    if (amounts.length === 1) return `$${amounts[0]}`;
-    // No dollar amounts found — show summary as-is if short enough
+    if (rubleAmounts.length === 1) return `${rubleAmounts[0]} ₽`;
+    // No ruble amounts found — show summary as-is if short enough
     if (event.price_summary.length <= 25) return event.price_summary;
   }
   if (event.price_min > 0 && event.price_max > 0 && event.price_min !== event.price_max)
-    return `$${event.price_min}–$${event.price_max}`;
-  if (event.price_min > 0) return `$${event.price_min}`;
+    return `${event.price_min}–${event.price_max} ₽`;
+  if (event.price_min > 0) return `${event.price_min} ₽`;
   return '—';
 }
 
@@ -119,9 +119,9 @@ function MetaBar({ event }: { event: Event }) {
   const dateMeta = formatDateSmart(event.next_start_at, event.next_end_at);
   const cols = [
     { label: dateMeta.label, value: dateMeta.value },
-    { label: 'START TIME', value: formatTime(event.next_start_at) },
-    { label: 'AGE GROUP', value: formatAgeLabel(event.age_label) || 'All Ages' },
-    { label: 'PRICE', value: priceLabel(event) },
+    { label: 'ВРЕМЯ', value: formatTime(event.next_start_at) },
+    { label: 'ВОЗРАСТ', value: formatAgeLabel(event.age_label) || 'Любой' },
+    { label: 'ЦЕНА', value: priceLabel(event) },
   ];
 
   return (
@@ -129,7 +129,7 @@ function MetaBar({ event }: { event: Event }) {
       {cols.map((c, i) => (
         <div key={i} className="ed-meta-col">
           <span className="ed-meta-label">{c.label}</span>
-          <span className={`ed-meta-value${c.label === 'PRICE' && event.is_free ? ' ed-free' : ''}${c.label === 'PRICE' ? ' ed-meta-value-price' : ''}`}>
+          <span className={`ed-meta-value${c.label === 'ЦЕНА' && event.is_free ? ' ed-free' : ''}${c.label === 'ЦЕНА' ? ' ed-meta-value-price' : ''}`}>
             {c.value}
           </span>
         </div>
@@ -144,7 +144,7 @@ function OverviewTab({ event }: { event: Event }) {
       {event.description && (
         <>
           <h3 className="ed-section-title">
-            <span className="ed-sparkle">✦</span> description
+            <span className="ed-sparkle">✦</span> описание
           </h3>
           <p className="ed-body">{event.description}</p>
         </>
@@ -167,21 +167,21 @@ function OverviewTab({ event }: { event: Event }) {
 function GoodToKnowTab({ event }: { event: Event }) {
   const [expanded, setExpanded] = useState(false);
   const d = event.derisk;
-  if (!d) return <p className="ed-empty">No additional info available.</p>;
+  if (!d) return <p className="ed-empty">Нет дополнительной информации.</p>;
 
   const sections = [
-    { label: 'What You Get', value: d.what_you_get },
-    { label: 'Practical Tips', value: d.practical_tips },
-    { label: 'Best For & Duration', value: [d.who_its_best_for, d.duration].filter(Boolean).join('. ') || undefined },
-    { label: 'Crowds', value: d.crowds },
-    { label: 'What to Expect', value: d.what_to_expect },
-    { label: 'How to Get There', value: d.how_to_get_there },
-    { label: 'Tickets', value: d.tickets_availability },
-    { label: 'Price Info', value: d.price_info },
-    { label: 'Verdict', value: d.verdict },
+    { label: 'Что вас ждёт', value: d.what_you_get },
+    { label: 'Полезные советы', value: d.practical_tips },
+    { label: 'Для кого / продолжительность', value: [d.who_its_best_for, d.duration].filter(Boolean).join('. ') || undefined },
+    { label: 'Посетители', value: d.crowds },
+    { label: 'Чего ожидать', value: d.what_to_expect },
+    { label: 'Как добраться', value: d.how_to_get_there },
+    { label: 'Билеты', value: d.tickets_availability },
+    { label: 'О ценах', value: d.price_info },
+    { label: 'Итог', value: d.verdict },
   ].filter((s) => s.value) as { label: string; value: string }[];
 
-  if (sections.length === 0) return <p className="ed-empty">No additional info available.</p>;
+  if (sections.length === 0) return <p className="ed-empty">Нет дополнительной информации.</p>;
 
   const PREVIEW_COUNT = 3;
   const visible = expanded ? sections : sections.slice(0, PREVIEW_COUNT);
@@ -189,7 +189,7 @@ function GoodToKnowTab({ event }: { event: Event }) {
 
   return (
     <div className="ed-tab-content">
-      <h3 className="ed-section-title">Good to know</h3>
+      <h3 className="ed-section-title">Полезно знать</h3>
       <div className="ed-gtk-list">
         {visible.map((s) => (
           <div key={s.label} className="ed-gtk-item">
@@ -200,7 +200,7 @@ function GoodToKnowTab({ event }: { event: Event }) {
       </div>
       {hasMore && (
         <button className="ed-gtk-readmore" onClick={() => setExpanded(!expanded)}>
-          {expanded ? 'Show less' : `Read more (${sections.length - PREVIEW_COUNT} more)`}
+          {expanded ? 'Свернуть' : `Читать ещё (ещё ${sections.length - PREVIEW_COUNT})`}
         </button>
       )}
     </div>
@@ -213,7 +213,7 @@ function ReviewsTab({ event }: { event: Event }) {
   return (
     <div className="ed-tab-content">
       <h3 className="ed-section-title">
-        Reviews
+        Отзывы
         {event.rating_avg > 0 && (
           <span className="ed-rating-inline"> ★ {event.rating_avg.toFixed(1)}</span>
         )}
@@ -228,7 +228,7 @@ function ReviewsTab({ event }: { event: Event }) {
           ))}
         </div>
       ) : (
-        <p className="ed-body" style={{ opacity: 0.5 }}>No written reviews yet.</p>
+        <p className="ed-body" style={{ opacity: 0.5 }}>Отзывов пока нет.</p>
       )}
     </div>
   );
@@ -294,7 +294,7 @@ function LocationTab({ event }: { event: Event }) {
 
   return (
     <div className="ed-tab-content">
-      <h3 className="ed-section-title">Location</h3>
+      <h3 className="ed-section-title">Расположение</h3>
 
       {/* Details */}
       <div className="ed-location-details">
@@ -368,16 +368,16 @@ export default function EventDetail({ event, open, onClose, isFlagged = false, o
       <div className={`event-detail-overlay ${open ? 'open' : ''}`}>
         {/* ── Top bar: X, Share, Save ── */}
         <div className="ed-topbar">
-          <button onClick={onClose} className="ed-topbar-btn" aria-label="Close">
+          <button onClick={onClose} className="ed-topbar-btn" aria-label="Закрыть">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
           <div className="ed-topbar-right">
-            <button className="ed-topbar-btn" aria-label="Share" onClick={() => { track('share_clicked', { event_id: event.id, event_title: event.title }); navigator.share?.({ title: event.title, url: event.source_url || window.location.href }).catch(() => {}); }}>
+            <button className="ed-topbar-btn" aria-label="Поделиться" onClick={() => { track('share_clicked', { event_id: event.id, event_title: event.title }); navigator.share?.({ title: event.title, url: event.source_url || window.location.href }).catch(() => {}); }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </button>
             <button
               className={`ed-topbar-btn ${liked ? 'ed-liked' : ''}`}
-              aria-label="Save"
+              aria-label="Сохранить"
               onClick={() => toggle(event)}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? '#e91e63' : 'none'} stroke={liked ? '#e91e63' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -407,7 +407,7 @@ export default function EventDetail({ event, open, onClose, isFlagged = false, o
                     checked={isFlagged}
                     onChange={(e) => onToggleFlag(event, e.target.checked)}
                   />
-                  <span>Wrong age range</span>
+                  <span>Неверный возраст</span>
                 </label>
               )}
             </div>
@@ -471,7 +471,7 @@ export default function EventDetail({ event, open, onClose, isFlagged = false, o
             )}
             {event.data?.venue_stroller_friendly && (
               <div className="ed-qi-badges">
-                <span className="ed-qi-badge">🍼 Stroller friendly</span>
+                <span className="ed-qi-badge">🍼 Можно с коляской</span>
               </div>
             )}
           </div>
@@ -522,7 +522,7 @@ export default function EventDetail({ event, open, onClose, isFlagged = false, o
                 });
               }}
             >
-              Buy ticket
+              Купить билет
             </a>
           </div>
         )}

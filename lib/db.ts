@@ -625,34 +625,33 @@ export function getCategories(): { value: string; label: string }[] {
   const rows = db.prepare('SELECT DISTINCT category_l1 FROM events WHERE category_l1 IS NOT NULL AND (status IN (\'published\', \'done\', \'new\') OR status LIKE \'%.done\') ORDER BY category_l1').all() as { category_l1: string }[];
 
   const labelMap: Record<string, string> = {
-    family: 'Parents & Kids',
-    arts: 'Arts & Culture',
-    theater: 'Theater & Performing Arts',
-    attractions: 'Attractions & Activities',
-    books: 'Literary & Books',
-    holiday: 'Holiday & Seasonal',
-    sports: 'Sports & Fitness',
-    Art: 'Arts & Culture',
-    "Children's Activities": 'Parents & Kids',
-    // Polish: consistent Title Case for remaining single-word categories
-    comedy: 'Comedy',
-    community: 'Community',
-    education: 'Education',
-    fashion: 'Fashion',
-    film: 'Film',
-    food: 'Food',
-    gaming: 'Gaming',
-    music: 'Music',
-    nightlife: 'Nightlife',
-    outdoors: 'Outdoors',
-    science: 'Science',
-    wellness: 'Wellness',
+    family: 'Дети и родители',
+    arts: 'Искусство и культура',
+    theater: 'Театр и шоу',
+    attractions: 'Аттракционы',
+    books: 'Книги',
+    holiday: 'Праздники',
+    sports: 'Спорт и фитнес',
+    Art: 'Искусство и культура',
+    "Children's Activities": 'Дети и родители',
+    comedy: 'Юмор',
+    community: 'Сообщество',
+    education: 'Образование',
+    fashion: 'Мода',
+    film: 'Кино',
+    food: 'Еда',
+    gaming: 'Игры',
+    music: 'Музыка',
+    nightlife: 'Ночная жизнь',
+    outdoors: 'На улице',
+    science: 'Наука',
+    wellness: 'Здоровье',
   };
 
   // Preferred canonical value for each label (used when deduplicating)
   const canonicalValue: Record<string, string> = {
-    'Parents & Kids': 'family',
-    'Arts & Culture': 'arts',
+    'Дети и родители': 'family',
+    'Искусство и культура': 'arts',
   };
 
   const seen = new Set<string>();
@@ -669,8 +668,8 @@ export function getCategories(): { value: string; label: string }[] {
   }
 
   // Virtual categories (not a direct category_l1 in DB)
-  if (!seen.has('Nature')) {
-    result.push({ value: 'nature', label: 'Nature' });
+  if (!seen.has('Природа')) {
+    result.push({ value: 'nature', label: 'Природа' });
   }
 
   return result;

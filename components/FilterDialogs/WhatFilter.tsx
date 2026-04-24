@@ -96,7 +96,7 @@ export default function WhatFilter({
     <div className="filter-dialog-backdrop" onClick={onClose}>
       <div className="filter-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">What are you looking for?</h3>
+          <h3 className="text-lg font-semibold text-white">Что ищем?</h3>
           <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-300 hover:text-white">
             <input
               type="checkbox"
@@ -104,7 +104,7 @@ export default function WhatFilter({
               onChange={(e) => setHighRating(e.target.checked)}
               style={{ accentColor: '#ffc107', width: 16, height: 16 }}
             />
-            <span>★ Rated 4.5 & up</span>
+            <span>★ Рейтинг 4.5+</span>
           </label>
         </div>
 
@@ -113,13 +113,13 @@ export default function WhatFilter({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search keywords..."
+            placeholder="Поиск по ключевым словам..."
             className="w-full px-3 py-2 border border-[rgba(255,255,255,0.1)] rounded-lg text-sm focus:outline-none focus:border-[#e91e63] bg-[#16143a] text-white placeholder-gray-500"
           />
         </div>
 
         <p className="text-xs text-gray-500 mb-3">
-          Click to include (green), click again to exclude (red), click again to reset
+          Нажмите — выбрать (зелёный), ещё раз — исключить (красный), снова — сбросить
         </p>
 
         <div className="flex flex-wrap gap-2 mb-6">
@@ -141,14 +141,14 @@ export default function WhatFilter({
             onClick={handleClear}
             className="flex-1 py-2 px-4 rounded-lg border border-[rgba(255,255,255,0.15)] text-sm font-medium text-gray-400 hover:bg-[rgba(255,255,255,0.05)]"
           >
-            Clear
+            Сбросить
           </button>
           <button
             onClick={handleApply}
             className="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white"
             style={{ backgroundColor: '#e91e63' }}
           >
-            Apply
+            Применить
           </button>
         </div>
       </div>

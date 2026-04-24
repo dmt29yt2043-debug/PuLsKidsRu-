@@ -38,12 +38,12 @@ export default function BudgetFilter({
   return (
     <div className="filter-dialog-backdrop" onClick={onClose}>
       <div className="filter-dialog" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold mb-4 text-white">Budget</h3>
+        <h3 className="text-lg font-semibold mb-4 text-white">Бюджет</h3>
 
         <div className="space-y-3 mb-4">
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-sm text-gray-400 mb-1">Min ($)</label>
+              <label className="block text-sm text-gray-400 mb-1">Мин (₽)</label>
               <input
                 type="number"
                 value={priceMin}
@@ -54,7 +54,7 @@ export default function BudgetFilter({
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm text-gray-400 mb-1">Max ($)</label>
+              <label className="block text-sm text-gray-400 mb-1">Макс (₽)</label>
               <input
                 type="number"
                 value={priceMax}
@@ -73,7 +73,7 @@ export default function BudgetFilter({
               onChange={(e) => setIsFree(e.target.checked)}
               className="w-4 h-4 accent-[#e91e63]"
             />
-            <span className="text-sm text-gray-300">Free events only</span>
+            <span className="text-sm text-gray-300">Только бесплатные</span>
           </label>
         </div>
 
@@ -82,14 +82,14 @@ export default function BudgetFilter({
             onClick={handleClear}
             className="flex-1 py-2 px-4 rounded-lg border border-[rgba(255,255,255,0.15)] text-sm font-medium text-gray-400 hover:bg-[rgba(255,255,255,0.05)]"
           >
-            Clear
+            Сбросить
           </button>
           <button
             onClick={handleApply}
             className="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white"
             style={{ backgroundColor: '#e91e63' }}
           >
-            Apply
+            Применить
           </button>
         </div>
       </div>

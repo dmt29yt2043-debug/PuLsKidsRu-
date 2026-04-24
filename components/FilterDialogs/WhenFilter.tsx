@@ -51,9 +51,9 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
     nextSun.setDate(nextSun.getDate() + 1);
 
     return [
-      { label: 'Tomorrow', from: tomorrow, to: tomorrow },
-      { label: 'Day after', from: dayAfter, to: dayAfter },
-      { label: 'Weekend', from: nextSat, to: nextSun },
+      { label: 'Завтра', from: tomorrow, to: tomorrow },
+      { label: 'Послезавтра', from: dayAfter, to: dayAfter },
+      { label: 'Выходные', from: nextSat, to: nextSun },
     ];
   }, [today]);
 
@@ -112,7 +112,7 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
     return days;
   }, [viewMonth, viewYear]);
 
-  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
@@ -125,8 +125,8 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
 
   // Summary text
   const summaryText = useMemo(() => {
-    if (!selectedFrom) return 'Select dates';
-    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (!selectedFrom) return 'Выберите даты';
+    const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
     if (!selectedTo || isSameDay(selectedFrom, selectedTo)) return fmt(selectedFrom);
     return `${fmt(selectedFrom)} – ${fmt(selectedTo)}`;
   }, [selectedFrom, selectedTo]);
@@ -134,7 +134,7 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
   return (
     <div className="filter-dialog-backdrop" onClick={onClose}>
       <div className="filter-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 380 }}>
-        <h3 className="text-lg font-semibold mb-3 text-white">When?</h3>
+        <h3 className="text-lg font-semibold mb-3 text-white">Когда?</h3>
 
         {/* Quick buttons */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -171,7 +171,7 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
 
           {/* Day headers */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+            {['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'].map((d) => (
               <div key={d} style={{ textAlign: 'center', fontSize: 11, color: '#6b7280', padding: '4px 0', fontWeight: 500 }}>{d}</div>
             ))}
           </div>
@@ -247,7 +247,7 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
               color: '#9ca3af', fontSize: 14, fontWeight: 500, cursor: 'pointer',
             }}
           >
-            Clear
+            Сбросить
           </button>
           <button
             onClick={handleApply}
@@ -257,7 +257,7 @@ export default function WhenFilter({ dateFrom: initialFrom, dateTo: initialTo, o
               color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}
           >
-            Apply
+            Применить
           </button>
         </div>
       </div>

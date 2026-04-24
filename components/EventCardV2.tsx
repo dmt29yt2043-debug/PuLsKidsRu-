@@ -31,7 +31,7 @@ function formatDateRange(startStr: string, endStr?: string): string {
       : new Date(startStr + 'T00:00:00');
 
     const fmt = (d: Date) =>
-      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
 
     if (!endStr) return fmt(startDate);
 
@@ -44,15 +44,15 @@ function formatDateRange(startStr: string, endStr?: string): string {
     );
 
     if (diffDays <= 0) return fmt(startDate);
-    if (diffDays > 7)  return `Through ${fmt(endDate)}`;
+    if (diffDays > 7)  return `До ${fmt(endDate)}`;
 
-    // Same month short-form: "Apr 4–6"
+    // Same month short-form: "4–6 апр."
     const sameMonth =
       startDate.getMonth() === endDate.getMonth() &&
       startDate.getFullYear() === endDate.getFullYear();
 
     if (sameMonth) {
-      return `${startDate.toLocaleDateString('en-US', { month: 'short' })} ${startDate.getDate()}–${endDate.getDate()}`;
+      return `${startDate.getDate()}–${endDate.getDate()} ${startDate.toLocaleDateString('ru-RU', { month: 'short' })}`;
     }
     return `${fmt(startDate)} – ${fmt(endDate)}`;
   } catch {
@@ -61,10 +61,10 @@ function formatDateRange(startStr: string, endStr?: string): string {
 }
 
 function formatPrice(event: Event): string {
-  if (event.is_free) return 'FREE';
+  if (event.is_free) return 'Бесплатно';
   if (event.price_min > 0 && event.price_max > event.price_min)
-    return `$${event.price_min}–$${event.price_max}`;
-  if (event.price_min > 0) return `$${event.price_min}`;
+    return `${event.price_min}–${event.price_max} ₽`;
+  if (event.price_min > 0) return `${event.price_min} ₽`;
   if (event.price_summary) return event.price_summary;
   return '';
 }

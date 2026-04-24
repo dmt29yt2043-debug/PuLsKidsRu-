@@ -29,7 +29,7 @@ interface Suggestion {
   apply: () => void;
 }
 
-const NYC_BOROUGHS = ['Upper Manhattan', 'Midtown', 'Lower Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
+const MOSCOW_DISTRICTS = ['ЦАО', 'САО', 'СВАО', 'ВАО', 'ЮВАО', 'ЮАО', 'ЮЗАО', 'ЗАО', 'СЗАО'];
 
 function buildQuery(filters: FilterState, overrides: Partial<FilterState> = {}, drop: (keyof FilterState)[] = []): URLSearchParams {
   const merged: FilterState = { ...filters, ...overrides };
@@ -54,7 +54,13 @@ function buildQuery(filters: FilterState, overrides: Partial<FilterState> = {}, 
 
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+  return d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric', weekday: 'short' });
+}
+
+function pluralEvents(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return `${n} событие`;
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} события`;
+  return `${n} событий`;
 }
 
 export default function EmptyStateSuggestions({ filters, onApply }: Props) {
@@ -101,20 +107,20 @@ export default function EmptyStateSuggestions({ filters, onApply }: Props) {
           if (nearest && nearest[0] !== filters.dateFrom) {
             out.push({
               key: 'date',
-              label: `Try ${formatDate(nearest[0])}`,
-              hint: `${nearest[1]} event${nearest[1] === 1 ? '' : 's'} that day`,
+              label: `Попробовать ${formatDate(nearest[0])}`,
+              hint: `${pluralEvents(nearest[1])} в этот день`,
               count: nearest[1],
               apply: () => onApply({ ...filters, dateFrom: nearest[0], dateTo: nearest[0] }),
             });
           }
         }
 
-        // B — nearby boroughs (only if neighborhoods filter is active)
+        // B — nearby districts (only if neighborhoods filter is active)
         if (filters.neighborhoods?.length && resB?.events?.length) {
           const byArea = new Map<string, number>();
           for (const ev of resB.events as Event[]) {
             const loc = `${ev.city || ''} ${ev.address || ''}`.toLowerCase();
-            for (const nb of NYC_BOROUGHS) {
+            for (const nb of MOSCOW_DISTRICTS) {
               if (filters.neighborhoods?.includes(nb)) continue;
               if (loc.includes(nb.toLowerCase())) {
                 byArea.set(nb, (byArea.get(nb) || 0) + 1);
@@ -126,8 +132,8 @@ export default function EmptyStateSuggestions({ filters, onApply }: Props) {
           if (topArea && topArea[1] > 0) {
             out.push({
               key: 'area',
-              label: `Try ${topArea[0]}`,
-              hint: `${topArea[1]} event${topArea[1] === 1 ? '' : 's'} match your other filters`,
+              label: `Попробовать ${topArea[0]}`,
+              hint: `${pluralEvents(topArea[1])} по другим фильтрам`,
               count: topArea[1],
               apply: () => onApply({ ...filters, neighborhoods: [topArea[0]] }),
             });
@@ -138,8 +144,8 @@ export default function EmptyStateSuggestions({ filters, onApply }: Props) {
         if (filters.categories?.length && resC?.total > 0) {
           out.push({
             key: 'cats',
-            label: 'Any category',
-            hint: `${resC.total} event${resC.total === 1 ? '' : 's'} if we ignore categories`,
+            label: 'Любая категория',
+            hint: `${pluralEvents(resC.total)} без фильтра по категориям`,
             count: resC.total,
             apply: () => {
               const next = { ...filters };
@@ -167,7 +173,7 @@ export default function EmptyStateSuggestions({ filters, onApply }: Props) {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', color: '#777', fontSize: 13, marginTop: 10 }}>
-        Looking for alternatives…
+        Ищем альтернативы…
       </div>
     );
   }
@@ -177,7 +183,7 @@ export default function EmptyStateSuggestions({ filters, onApply }: Props) {
   return (
     <div style={{ marginTop: 20, maxWidth: 480, margin: '20px auto 0', textAlign: 'left' }}>
       <div style={{ color: '#aaa', fontSize: 13, marginBottom: 10, textAlign: 'center' }}>
-        Here&rsquo;s what we found nearby:
+        Вот что нашли похожего:
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {suggestions.map((s) => (

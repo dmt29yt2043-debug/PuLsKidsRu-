@@ -39,14 +39,14 @@ const PAGE_SIZE = 30;
 function formatDateRange(filters: FilterState): string {
   // Append T00:00:00 to parse as local time instead of UTC midnight (avoids -1 day offset)
   if (filters.dateFrom && filters.dateTo) {
-    const from = new Date(filters.dateFrom + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const to = new Date(filters.dateTo + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${from} - ${to}`;
+    const from = new Date(filters.dateFrom + 'T00:00:00').toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+    const to = new Date(filters.dateTo + 'T00:00:00').toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+    return `${from} – ${to}`;
   }
   if (filters.dateFrom) {
-    return `From ${new Date(filters.dateFrom + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    return `С ${new Date(filters.dateFrom + 'T00:00:00').toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' })}`;
   }
-  return 'Any date';
+  return 'Любая дата';
 }
 
 function formatWho(filters: FilterState): string {
@@ -58,24 +58,24 @@ function formatWho(filters: FilterState): string {
     return parts.join(' ');
   }
   if (filters.ageMax !== undefined && filters.ageMax !== null) {
-    return `Up to ${filters.ageMax}yo`;
+    return `До ${filters.ageMax} лет`;
   }
-  return 'Anyone';
+  return 'Любой';
 }
 
 function formatWhere(filters: FilterState): string {
   const nbs = filters.neighborhoods;
-  if (!nbs || nbs.length === 0 || nbs.includes('Anywhere in NYC')) return 'Anywhere';
+  if (!nbs || nbs.length === 0 || nbs.includes('Вся Москва')) return 'Вся Москва';
   if (nbs.length === 1) return nbs[0];
-  return `${nbs.length} areas`;
+  return `${nbs.length} округа`;
 }
 
 function formatBudget(filters: FilterState): string {
-  if (filters.isFree) return 'Free only';
-  if (filters.priceMin !== undefined && filters.priceMax !== undefined) return `$${filters.priceMin} - $${filters.priceMax}`;
-  if (filters.priceMin !== undefined) return `From $${filters.priceMin}`;
-  if (filters.priceMax !== undefined) return `Up to $${filters.priceMax}`;
-  return 'Any budget';
+  if (filters.isFree) return 'Бесплатно';
+  if (filters.priceMin !== undefined && filters.priceMax !== undefined) return `${filters.priceMin} – ${filters.priceMax} ₽`;
+  if (filters.priceMin !== undefined) return `От ${filters.priceMin} ₽`;
+  if (filters.priceMax !== undefined) return `До ${filters.priceMax} ₽`;
+  return 'Любой бюджет';
 }
 
 /**
@@ -124,7 +124,7 @@ function eventMatchesFilters(event: Event, filters: FilterState): boolean {
     if (filters.excludeCategories.some((c) => c.toLowerCase() === l1)) return false;
   }
   // Neighborhoods (simple substring match against city/address)
-  if (filters.neighborhoods && filters.neighborhoods.length > 0 && !filters.neighborhoods.includes('Anywhere in NYC')) {
+  if (filters.neighborhoods && filters.neighborhoods.length > 0 && !filters.neighborhoods.includes('Вся Москва')) {
     const loc = `${event.city || ''} ${event.address || ''}`.toLowerCase();
     const hit = filters.neighborhoods.some((n) => loc.includes(n.toLowerCase()));
     if (!hit) return false;
@@ -215,7 +215,7 @@ function HomeInner() {
 
   // Price range slider (dual handles)
   const [priceSliderMin, setPriceSliderMin] = useState(0);
-  const [priceSliderMax, setPriceSliderMax] = useState(200);
+  const [priceSliderMax, setPriceSliderMax] = useState(3000);
   const [chatResetKey, setChatResetKey] = useState(0);
 
   // Discovery state
@@ -637,7 +637,7 @@ function HomeInner() {
 
   const handleWhereApply = useCallback((neighborhoods: string[]) => {
     trackFilterApplied({ filter: 'where', neighborhoods }, 'ui');
-    const hasNeighborhoods = neighborhoods.length > 0 && !neighborhoods.includes('Anywhere in NYC');
+    const hasNeighborhoods = neighborhoods.length > 0 && !neighborhoods.includes('Вся Москва');
     setFilters((prev) => ({
       ...prev,
       neighborhoods: hasNeighborhoods ? neighborhoods : undefined,
@@ -660,7 +660,7 @@ function HomeInner() {
 
   const handlePriceSliderCommit = useCallback(() => {
     const hasMin = priceSliderMin > 0;
-    const hasMax = priceSliderMax < 200;
+    const hasMax = priceSliderMax < 3000;
     trackFilterApplied(
       {
         filter: 'price_slider',
@@ -844,8 +844,8 @@ function HomeInner() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [displayEvents.length, activeTab]);
 
-  const sliderMinPct = Math.round((priceSliderMin / 200) * 100);
-  const sliderMaxPct = Math.round((priceSliderMax / 200) * 100);
+  const sliderMinPct = Math.round((priceSliderMin / 3000) * 100);
+  const sliderMaxPct = Math.round((priceSliderMax / 3000) * 100);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -859,7 +859,7 @@ function HomeInner() {
         {/* Center: title + tabs */}
         <div className="flex items-center gap-4">
           <div className="v2-header-center">
-            <span className="v2-header-title">Better Moments with your Kids. Less Planning</span>
+            <span className="v2-header-title">Лучшие события для детей в Москве</span>
           </div>
           <div className="v2-header-tabs">
             <button
@@ -870,7 +870,7 @@ function HomeInner() {
                 setActiveTab('feed');
               }}
             >
-              All ({allTotal})
+              Все ({allTotal})
             </button>
             <button
               className={`v2-header-tab ${activeTab === 'foryou' ? 'active' : ''}`}
@@ -882,7 +882,7 @@ function HomeInner() {
                 setActiveTab('foryou');
               }}
             >
-              For you ({total})
+              Для вас ({total})
             </button>
           </div>
         </div>
@@ -893,7 +893,7 @@ function HomeInner() {
             className="v2-header-icon"
             onClick={() => setFavoritesOnly((v) => !v)}
             style={{ position: 'relative' }}
-            title={favoritesOnly ? 'Show all events' : 'Show saved events'}
+            title={favoritesOnly ? 'Показать все события' : 'Показать сохранённые'}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill={favoritesOnly ? '#e91e63' : favoriteIds.size > 0 ? '#e91e63' : 'none'} stroke="#e91e63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -920,14 +920,14 @@ function HomeInner() {
         <aside className="v2-sidebar">
           {/* Filter section */}
           <div className="v2-sidebar-filters">
-            <div className="v2-sidebar-filters-label">Refine Search</div>
+            <div className="v2-sidebar-filters-label">Фильтры</div>
 
             {/* Price Range Slider (dual handle) */}
             <div className="v2-price-range">
               <div className="v2-price-range-header">
-                <span className="v2-price-range-label">Price Range</span>
+                <span className="v2-price-range-label">Диапазон цен</span>
                 <span className="v2-price-range-value">
-                  ${priceSliderMin} &ndash; ${priceSliderMax >= 200 ? '200+' : priceSliderMax}
+                  {priceSliderMin} – {priceSliderMax >= 3000 ? '3000+' : priceSliderMax} ₽
                 </span>
               </div>
               <div
@@ -942,7 +942,8 @@ function HomeInner() {
                 <input
                   type="range"
                   min="0"
-                  max="200"
+                  max="3000"
+                  step="100"
                   value={priceSliderMin}
                   onChange={handlePriceMinChange}
                   onMouseUp={handlePriceSliderCommit}
@@ -952,7 +953,8 @@ function HomeInner() {
                 <input
                   type="range"
                   min="0"
-                  max="200"
+                  max="3000"
+                  step="100"
                   value={priceSliderMax}
                   onChange={handlePriceMaxChange}
                   onMouseUp={handlePriceSliderCommit}
@@ -972,11 +974,11 @@ function HomeInner() {
                   <rect x="3" y="14" width="7" height="7" />
                 </svg>
               </div>
-              <span className="v2-filter-item-label">What</span>
+              <span className="v2-filter-item-label">Что</span>
               <span className="v2-filter-item-value">
                 {filters.categories && filters.categories.length > 0
-                  ? `${filters.categories.length} selected`
-                  : 'Activities'}
+                  ? `${filters.categories.length} выбрано`
+                  : 'Активности'}
               </span>
               <span className="v2-filter-item-chevron">&rsaquo;</span>
             </div>
@@ -991,7 +993,7 @@ function HomeInner() {
                   <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
-              <span className="v2-filter-item-label">Date</span>
+              <span className="v2-filter-item-label">Дата</span>
               <span className="v2-filter-item-value">{formatDateRange(filters)}</span>
               <span className="v2-filter-item-chevron">&rsaquo;</span>
             </div>
@@ -1004,7 +1006,7 @@ function HomeInner() {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               </div>
-              <span className="v2-filter-item-label">Who</span>
+              <span className="v2-filter-item-label">Кто</span>
               <span className="v2-filter-item-value">{formatWho(filters)}</span>
               <span className="v2-filter-item-chevron">&rsaquo;</span>
             </div>
@@ -1017,7 +1019,7 @@ function HomeInner() {
                   <circle cx="12" cy="10" r="3" />
                 </svg>
               </div>
-              <span className="v2-filter-item-label">Where</span>
+              <span className="v2-filter-item-label">Где</span>
               <span className="v2-filter-item-value">{formatWhere(filters)}</span>
               <span className="v2-filter-item-chevron">&rsaquo;</span>
             </div>
@@ -1029,7 +1031,7 @@ function HomeInner() {
                 className="mt-2 w-full text-center text-xs py-1.5 rounded-lg transition-colors"
                 style={{ color: 'var(--primary)', background: 'rgba(233,30,99,0.1)' }}
               >
-                Reset all filters
+                Сбросить фильтры
               </button>
             )}
           </div>
@@ -1045,8 +1047,8 @@ function HomeInner() {
                 </svg>
               </div>
               <div className="v2-chat-header-text">
-                <span className="v2-chat-header-title">Pulse AI assistant</span>
-                <span className="v2-chat-header-subtitle">Exploring New York City</span>
+                <span className="v2-chat-header-title">Pulse AI</span>
+                <span className="v2-chat-header-subtitle">Ищем события в Москве</span>
               </div>
             </div>
 
@@ -1088,14 +1090,14 @@ function HomeInner() {
                     )}
                     {activeDigest.title}
                     <span className="active-digest-banner__count">
-                      · {digestEvents.length} events
+                      · {digestEvents.length} событий
                     </span>
                   </div>
                   {(activeDigest.subtitle || activeDigest.curator_name) && (
                     <div className="active-digest-banner__sub">
                       {activeDigest.subtitle}
                       {activeDigest.curator_name && (
-                        <span className="active-digest-banner__curator"> by {activeDigest.curator_name}</span>
+                        <span className="active-digest-banner__curator"> от {activeDigest.curator_name}</span>
                       )}
                     </div>
                   )}
@@ -1106,7 +1108,7 @@ function HomeInner() {
                 onClick={handleDigestClear}
                 aria-label="Clear digest"
               >
-                ✕ Clear
+                ✕ Закрыть
               </button>
             </div>
           )}
@@ -1123,7 +1125,7 @@ function HomeInner() {
               >
                 <div className="digest-tag-peers__header">
                   <h3>
-                    More <span className="digest-tag-peers__tag">{tagPeerPopover.tag}</span> digests
+                    Ещё <span className="digest-tag-peers__tag">{tagPeerPopover.tag}</span> подборок
                   </h3>
                   <button
                     className="digest-tag-peers__close"
@@ -1133,7 +1135,7 @@ function HomeInner() {
                 </div>
                 {tagPeerPopover.digests.length === 0 ? (
                   <div className="digest-tag-peers__empty">
-                    No other {tagPeerPopover.tag} digests right now.
+                    Других {tagPeerPopover.tag} подборок пока нет.
                   </div>
                 ) : (
                   <ul className="digest-tag-peers__list">
@@ -1151,8 +1153,8 @@ function HomeInner() {
                           <div className="digest-tag-peers__sub">{d.subtitle}</div>
                         )}
                         <div className="digest-tag-peers__meta">
-                          {d.event_count} events
-                          {d.curator_name && <> · by {d.curator_name}</>}
+                          {d.event_count} событий
+                          {d.curator_name && <> · от {d.curator_name}</>}
                         </div>
                       </li>
                     ))}
@@ -1168,7 +1170,7 @@ function HomeInner() {
             {!loading && !digestLoading && (
               <div className="results-sticky-top">
                 <div className="all-events-heading">
-                  <span>All Events</span>
+                  <span>Все события</span>
                   <span className="all-events-count">{displayTotal}</span>
                 </div>
                 <DateBar
@@ -1192,8 +1194,8 @@ function HomeInner() {
               </div>
             ) : displayEvents.length === 0 ? (
               <div className="results-empty">
-                <p className="text-base">No events found</p>
-                <p className="text-sm mt-1">Try adjusting your filters</p>
+                <p className="text-base">Ничего не найдено</p>
+                <p className="text-sm mt-1">Попробуйте изменить фильтры</p>
                 <EmptyStateSuggestions
                   filters={filters}
                   onApply={(next) => {
@@ -1242,7 +1244,7 @@ function HomeInner() {
                 return next;
               });
             }}
-            title={mapExpanded ? 'Collapse map' : 'Expand map'}
+            title={mapExpanded ? 'Свернуть карту' : 'Развернуть карту'}
           >
             {mapExpanded ? '›' : '‹'}
           </button>
@@ -1281,9 +1283,9 @@ function HomeInner() {
             type="button"
             className="debug-session-close"
             onClick={closeDebugSession}
-            title="Close session and save snapshot"
+            title="Закрыть сессию и сохранить снимок"
           >
-            Close session
+            Закрыть сессию
           </button>
         </div>
       )}
