@@ -245,20 +245,24 @@ export async function GET(req: NextRequest) {
   // Take top 40
   const top = scored.slice(0, 40);
 
-  // Parse JSON fields
+  // Parse JSON fields. Must include `categories` + `tags` + `data` in
+  // addition to reviews/derisk, otherwise event cards crash in the UI
+  // (event.categories.map is not a function).
+  const tryParse = <T,>(raw: unknown, fallback: T): T => {
+    if (typeof raw !== 'string' || !raw) return fallback;
+    try { return JSON.parse(raw) as T; } catch { return fallback; }
+  };
   const events = top.map(({ event: row, score, reasons }) => {
-    let reviews = [];
-    let derisk = {};
-    try { reviews = JSON.parse((row.reviews as string) || '[]'); } catch {}
-    try { derisk = JSON.parse((row.derisk as string) || '{}'); } catch {}
-
     return {
       ...row,
-      reviews,
-      derisk,
-      is_free: Boolean(row.is_free),
-      _score: score,
-      _reasons: reasons,
+      categories: tryParse<string[]>(row.categories, []),
+      tags:       tryParse<string[]>(row.tags, []),
+      reviews:    tryParse<unknown[]>(row.reviews, []),
+      derisk:     tryParse<Record<string, unknown>>(row.derisk, {}),
+      data:       tryParse<Record<string, unknown>>(row.data, {}),
+      is_free:    Boolean(row.is_free),
+      _score:     score,
+      _reasons:   reasons,
     };
   });
 

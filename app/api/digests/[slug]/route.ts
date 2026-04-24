@@ -7,6 +7,7 @@
 
 import { NextRequest } from 'next/server';
 import { getDigestBySlug, type DigestFilters } from '@/lib/digests';
+import { parseEventRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,14 @@ export async function GET(
     if (!result) {
       return Response.json({ error: 'Digest not found' }, { status: 404 });
     }
-    return Response.json({ digest: result.digest, events: result.events });
+    // Parse JSON fields (categories, tags, reviews, derisk, data) and coerce
+    // is_free → boolean. `/api/events` does this via parseEventRow; the digest
+    // endpoint used to return raw DB rows which crashed the frontend
+    // (event.categories.map is not a function in OverviewTab).
+    const events = result.events.map((row) =>
+      parseEventRow(row as unknown as Record<string, unknown>),
+    );
+    return Response.json({ digest: result.digest, events });
   } catch (err) {
     console.error('Digest detail API error:', err);
     return Response.json({ error: 'Failed to fetch digest' }, { status: 500 });

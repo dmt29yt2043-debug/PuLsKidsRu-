@@ -50,7 +50,7 @@ function parseJsonField<T>(value: string | null | undefined, fallback: T): T {
   }
 }
 
-function parseEventRow(row: Record<string, unknown>): Event {
+export function parseEventRow(row: Record<string, unknown>): Event {
   return {
     ...row,
     is_free: Boolean(row.is_free),
