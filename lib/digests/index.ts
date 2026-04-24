@@ -118,5 +118,5 @@ export function getDigestBySlug(slug: string): { digest: DigestMeta; events: Eve
 
 /** All 5 slugs — useful for validation / routing. */
 export function allSlugs(): string[] {
-  return ['weekend-kids-nyc', 'indoor-rainy-day', 'easy-no-planning', 'free-affordable', 'kids-love-parents-approve'];
+  return ['weekend', 'indoor', 'easy', 'budget', 'popular'];
 }

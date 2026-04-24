@@ -13,10 +13,6 @@ export const LIVE_STATUS_FILTER = `(status IN ('published', 'done', 'new') OR st
 
 // ─── Moscow geo ───────────────────────────────────────────────────────────────
 
-/** District labels (kept empty — city_district is not populated in the RU DB,
- *  so this map is intentionally blank. Geo signal relies on bbox + city name). */
-export const CITY_DISTRICT_MAP: Record<string, string> = {};
-
 /** Accept Moscow name variants (lower-cased, trimmed). */
 export const CITY_NAMES = new Set([
   'москва',
@@ -29,10 +25,48 @@ export const CITY_BBOX = {
   lonMin: 37.29, lonMax: 37.97,
 };
 
-/** Central district bbox (ЦАО) — for "центр города" bonus. */
+export interface DistrictBounds {
+  name: string;        // short tag (ЦАО, САО, …)
+  fullName: string;    // human-readable
+  latMin: number;
+  latMax: number;
+  lonMin: number;
+  lonMax: number;
+  /** weight used by digest scoring — higher = more central/desirable */
+  weight: number;
+}
+
+/**
+ * 9 административных округов Москвы + их приблизительные bbox.
+ * `weight` подбирается под задачу "куда пойти с ребёнком":
+ *   - ЦАО = 1.0 (максимум культурных мест, театров, музеев)
+ *   - "ближний пояс" (САО, СВАО, СЗАО, ЗАО, ЮЗАО) = 0.7 (хорошая доступность)
+ *   - "дальний пояс" (ВАО, ЮАО, ЮВАО) = 0.55
+ * Совпадают с bbox в `lib/db.ts::NEIGHBORHOOD_BOUNDS` (единый источник истины).
+ */
+export const MOSCOW_DISTRICTS: DistrictBounds[] = [
+  { name: 'ЦАО',  fullName: 'Центральный',      latMin: 55.720, latMax: 55.785, lonMin: 37.555, lonMax: 37.685, weight: 1.00 },
+  { name: 'САО',  fullName: 'Северный',         latMin: 55.780, latMax: 55.900, lonMin: 37.390, lonMax: 37.660, weight: 0.70 },
+  { name: 'СВАО', fullName: 'Северо-Восточный', latMin: 55.800, latMax: 55.930, lonMin: 37.620, lonMax: 37.870, weight: 0.70 },
+  { name: 'СЗАО', fullName: 'Северо-Западный',  latMin: 55.790, latMax: 55.900, lonMin: 37.310, lonMax: 37.540, weight: 0.70 },
+  { name: 'ЗАО',  fullName: 'Западный',         latMin: 55.700, latMax: 55.840, lonMin: 37.290, lonMax: 37.565, weight: 0.70 },
+  { name: 'ЮЗАО', fullName: 'Юго-Западный',     latMin: 55.600, latMax: 55.740, lonMin: 37.390, lonMax: 37.600, weight: 0.70 },
+  { name: 'ВАО',  fullName: 'Восточный',        latMin: 55.700, latMax: 55.850, lonMin: 37.720, lonMax: 37.960, weight: 0.55 },
+  { name: 'ЮАО',  fullName: 'Южный',            latMin: 55.575, latMax: 55.700, lonMin: 37.560, lonMax: 37.760, weight: 0.55 },
+  { name: 'ЮВАО', fullName: 'Юго-Восточный',    latMin: 55.610, latMax: 55.720, lonMin: 37.680, lonMax: 37.900, weight: 0.55 },
+];
+
+/** Fast lookup by district name. */
+export const DISTRICT_BY_NAME: Record<string, DistrictBounds> = Object.fromEntries(
+  MOSCOW_DISTRICTS.map((d) => [d.name, d]),
+);
+
+/** Backward compat — CENTER_BBOX still used by older callers. */
 export const CENTER_BBOX = {
-  latMin: 55.720, latMax: 55.785,
-  lonMin: 37.555, lonMax: 37.685,
+  latMin: MOSCOW_DISTRICTS[0].latMin,
+  latMax: MOSCOW_DISTRICTS[0].latMax,
+  lonMin: MOSCOW_DISTRICTS[0].lonMin,
+  lonMax: MOSCOW_DISTRICTS[0].lonMax,
 };
 
 // ─── Format taxonomy (from data, 94% live coverage) ───────────────────────────

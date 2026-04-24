@@ -10,7 +10,7 @@ import { THRESHOLDS } from './constants';
 import { classifyEasy, classifyFamily, classifyQuality } from './signals';
 import { baseGeoAndCompleteness, dedupe, pickWithFallback } from './scoring-helpers';
 
-const SLUG = 'easy-no-planning';
+const SLUG = 'easy';
 
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 103,

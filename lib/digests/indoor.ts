@@ -10,7 +10,7 @@ import { THRESHOLDS } from './constants';
 import { classifyIndoor, classifyFamily, classifyQuality } from './signals';
 import { baseGeoAndCompleteness, dedupe, pickWithFallback } from './scoring-helpers';
 
-const SLUG = 'indoor-rainy-day';
+const SLUG = 'indoor';
 
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 102,

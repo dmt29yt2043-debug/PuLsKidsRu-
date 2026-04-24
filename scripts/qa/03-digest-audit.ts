@@ -56,38 +56,38 @@ Rate the fit 1-5.`;
 }
 
 const DIGEST_META: Record<string, { title: string; promise: string; rules: (e: Ev) => { ok: boolean; why?: string } }> = {
-  'weekend-kids-nyc': {
-    title: 'Top 10 Things to Do with Kids in NYC This Weekend',
-    promise: 'Kids-friendly event happening this upcoming Saturday or Sunday in NYC.',
+  'weekend': {
+    title: 'Топ 10 идей с детьми в Москве на выходные',
+    promise: 'Kids-friendly event happening this upcoming Saturday or Sunday in Moscow.',
     rules: (e) => isUpcomingWeekend(e) ? { ok: true } : { ok: false, why: 'next_start_at is not an upcoming Sat/Sun' },
   },
-  'indoor-rainy-day': {
-    title: 'Top 10 Indoor Activities for Kids in NYC (Rainy Day Edition)',
+  'indoor': {
+    title: 'Топ 10 идей в помещении для детей в Москве',
     promise: 'Indoor, weather-proof kids activity (museum, workshop, class, theater).',
     rules: (e) => {
       if (looksOutdoor(e) && !looksIndoor(e)) return { ok: false, why: 'looks outdoor (festival/park/street)' };
       return { ok: true };
     },
   },
-  'easy-no-planning': {
-    title: '10 Easy Things to Do with Kids in NYC (No Planning Needed)',
+  'easy': {
+    title: '10 простых идей с детьми в Москве (без планирования)',
     promise: 'Low-effort, drop-in, no-RSVP kids plan.',
     rules: (e) => {
       const blob = (e.description ?? '').toLowerCase() + ' ' + (e.title ?? '').toLowerCase();
-      if (/\b(sold out|registration required|rsvp|ticket required|by appointment)\b/.test(blob)) {
+      if (/\b(sold out|registration required|rsvp|ticket required|by appointment|по предварительной записи|обязательная регистрация)\b/.test(blob)) {
         return { ok: false, why: 'requires registration / sold out' };
       }
       return { ok: true };
     },
   },
-  'free-affordable': {
-    title: 'Top 15 Free & Affordable Things to Do with Kids in NYC',
-    promise: 'Free or ≤ $30/person kid activity.',
-    rules: (e) => looksAffordable(e) ? { ok: true } : { ok: false, why: `price_max=${e.price_max} > $30 and not free` },
+  'budget': {
+    title: 'Топ 15 бесплатных и недорогих идей с детьми в Москве',
+    promise: 'Free or ≤ 2000 ₽/person kid activity.',
+    rules: (e) => looksAffordable(e) ? { ok: true } : { ok: false, why: `price_max=${e.price_max} > 2000 ₽ and not free` },
   },
-  'kids-love-parents-approve': {
-    title: '10 Things Kids Love (And Parents Don\'t Regret)',
-    promise: 'Well-reviewed, high-quality kids event with real engagement.',
+  'popular': {
+    title: '10 впечатлений, которые запомнятся детям',
+    promise: 'Recurring, rich family event with engagement signals.',
     rules: (e) => hasSocialProof(e) ? { ok: true } : { ok: false, why: `only ${e.rating_count ?? 0} reviews / rating=${e.rating_avg}` },
   },
 };

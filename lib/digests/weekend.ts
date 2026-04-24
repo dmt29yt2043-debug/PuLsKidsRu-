@@ -11,7 +11,7 @@ import { THRESHOLDS } from './constants';
 import { classifyFamily, classifyQuality, classifyWeekend } from './signals';
 import { baseGeoAndCompleteness, dedupe, pickWithFallback } from './scoring-helpers';
 
-const SLUG = 'weekend-kids-nyc';
+const SLUG = 'weekend';
 
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 101,

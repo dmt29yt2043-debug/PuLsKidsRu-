@@ -15,7 +15,7 @@
 
 import type { EnrichedEvent, Signal } from './types';
 import {
-  CITY_NAMES, CITY_BBOX, CENTER_BBOX,
+  CITY_NAMES, CITY_BBOX, CENTER_BBOX, MOSCOW_DISTRICTS,
   INDOOR_FORMATS, OUTDOOR_FORMATS, MIXED_FORMATS, ADULT_FORMATS, EASY_FORMATS,
   FAMILY_MOTIVATIONS, WORTH_IT_MOTIVATIONS,
   INDOOR_KEYWORDS, OUTDOOR_KEYWORDS, INDOOR_VENUE_TYPES,
@@ -59,20 +59,41 @@ export function classifyCity(ev: EnrichedEvent): Signal & { borough: string | nu
   return { confidence: Math.min(1, confidence), reasons, borough };
 }
 
-/** Central district (ЦАО) bonus. */
-export function classifyCenter(ev: EnrichedEvent): Signal {
+/**
+ * Classify which Moscow okrug the event falls into, weighted by centrality.
+ * ЦАО → 1.0, ближний пояс → 0.7, дальний → 0.55, вне округов → 0.
+ * Also returns the tag name (for reasons / analytics).
+ */
+export function classifyDistrict(ev: EnrichedEvent): Signal & { district: string | null } {
   const reasons: string[] = [];
+  let district: string | null = null;
   let confidence = 0;
 
   if (ev.lat != null && ev.lon != null) {
-    const b = CENTER_BBOX;
-    if (ev.lat >= b.latMin && ev.lat <= b.latMax && ev.lon >= b.lonMin && ev.lon <= b.lonMax) {
-      confidence += 1.0;
-      reasons.push('центр Москвы (ЦАО)');
+    // Iterate in MOSCOW_DISTRICTS order (most central first). BBOX-ы соседних
+    // округов могут накладываться — берём первый подходящий, это даёт
+    // детерминированный "primary" округ.
+    for (const d of MOSCOW_DISTRICTS) {
+      if (ev.lat >= d.latMin && ev.lat <= d.latMax && ev.lon >= d.lonMin && ev.lon <= d.lonMax) {
+        district = d.name;
+        confidence = d.weight;
+        reasons.push(`${d.name} (${d.fullName})`);
+        break;
+      }
     }
   }
 
-  return { confidence: Math.min(1, confidence), reasons };
+  return { confidence, reasons, district };
+}
+
+/** Backwards-compat: ЦАО-only check. Equivalent to district === 'ЦАО'. */
+export function classifyCenter(ev: EnrichedEvent): Signal {
+  if (ev.lat == null || ev.lon == null) return { confidence: 0, reasons: [] };
+  const b = CENTER_BBOX;
+  if (ev.lat >= b.latMin && ev.lat <= b.latMax && ev.lon >= b.lonMin && ev.lon <= b.lonMax) {
+    return { confidence: 1.0, reasons: ['центр Москвы (ЦАО)'] };
+  }
+  return { confidence: 0, reasons: [] };
 }
 
 // Backwards-compat aliases used elsewhere in the codebase

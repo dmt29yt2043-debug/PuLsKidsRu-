@@ -138,8 +138,8 @@ const CASES: Case[] = [
   },
   {
     id: 'h10',
-    name: 'Digest by slug: weekend-kids-nyc',
-    url: '/api/digests/weekend-kids-nyc',
+    name: 'Digest by slug: weekend',
+    url: '/api/digests/weekend',
     check: (d, s) => {
       if (s !== 200) return bad(`status=${s}`);
       const r = d as { digest?: { title?: string }; events?: unknown[] };
@@ -148,8 +148,8 @@ const CASES: Case[] = [
   },
   {
     id: 'h11',
-    name: 'Digest by slug: indoor-rainy-day',
-    url: '/api/digests/indoor-rainy-day',
+    name: 'Digest by slug: indoor',
+    url: '/api/digests/indoor',
     check: (d, s) => {
       if (s !== 200) return bad(`status=${s}`);
       const r = d as { events?: unknown[] };

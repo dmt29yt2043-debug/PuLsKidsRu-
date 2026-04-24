@@ -10,7 +10,7 @@ import { THRESHOLDS } from './constants';
 import { classifyAffordable, classifyFamily, classifyQuality } from './signals';
 import { baseGeoAndCompleteness, dedupe, pickWithFallback } from './scoring-helpers';
 
-const SLUG = 'free-affordable';
+const SLUG = 'budget';
 
 const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
   id: 104,

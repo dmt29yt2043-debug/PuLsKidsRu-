@@ -3,34 +3,35 @@
  */
 
 import type { EnrichedEvent, ScoredEvent } from './types';
-import { classifyCompleteness, classifyNYC, classifyManhattan } from './signals';
+import { classifyCompleteness, classifyCity, classifyDistrict } from './signals';
 
 /**
- * Base score shared by all digests: NYC relevance (0–30) + Manhattan bonus (0–10)
+ * Base score shared by all digests: Moscow relevance (0–30) + district bonus
+ * (0–10, weighted by centrality: ЦАО=10, ближний пояс=7, дальний=5.5)
  * + data completeness (0–10). Roughly 0..50.
  */
 export function baseGeoAndCompleteness(ev: EnrichedEvent): { score: number; reasons: string[] } {
   const reasons: string[] = [];
   let score = 0;
 
-  const city = classifyNYC(ev);
+  const city = classifyCity(ev);
   if (city.confidence > 0) {
     const pts = Math.round(city.confidence * 30);
     score += pts;
     if (pts >= 20) reasons.push(`Москва (${pts})`);
   }
 
-  const center = classifyManhattan(ev);
-  if (center.confidence > 0) {
-    const pts = Math.round(center.confidence * 10);
+  const district = classifyDistrict(ev);
+  if (district.confidence > 0) {
+    const pts = Math.round(district.confidence * 10);
     score += pts;
-    if (pts >= 5) reasons.push(`центр (${pts})`);
+    if (pts >= 5 && district.district) reasons.push(`${district.district} (${pts})`);
   }
 
   const comp = classifyCompleteness(ev);
   const pts = Math.round(comp.confidence * 10);
   score += pts;
-  if (pts >= 7) reasons.push(`complete card (${pts})`);
+  if (pts >= 7) reasons.push(`полная карточка (${pts})`);
 
   return { score, reasons };
 }
