@@ -1,29 +1,53 @@
 /**
  * GET /api/digests/[slug] — returns a digest's metadata + its events.
  *
- * Computes the digest on demand from live events (no DB table). Response
- * shape matches the legacy version so existing UI code keeps working.
+ * Supports the same filter query params as /api/digests — when the user has
+ * an active filter and opens a specific digest, the contents are filtered.
  */
 
 import { NextRequest } from 'next/server';
-import { getDigestBySlug } from '@/lib/digests';
+import { getDigestBySlug, type DigestFilters } from '@/lib/digests';
 
 export const dynamic = 'force-dynamic';
 
+function parseFilters(req: NextRequest): DigestFilters {
+  const sp = req.nextUrl.searchParams;
+  const f: DigestFilters = {};
+  const cats = sp.get('categories');
+  if (cats) f.categories = cats.split(',').map((s) => s.trim()).filter(Boolean);
+  const ageMax = sp.get('age_max') ?? sp.get('ageMax');
+  if (ageMax !== null && ageMax !== '') {
+    const n = Number(ageMax);
+    if (Number.isFinite(n)) f.ageMax = n;
+  }
+  const nbs = sp.get('neighborhoods');
+  if (nbs) f.neighborhoods = nbs.split(',').map((s) => s.trim()).filter(Boolean);
+  const isFree = sp.get('is_free') ?? sp.get('isFree');
+  if (isFree === 'true' || isFree === '1') f.isFree = true;
+  const priceMax = sp.get('price_max') ?? sp.get('priceMax');
+  if (priceMax !== null && priceMax !== '') {
+    const n = Number(priceMax);
+    if (Number.isFinite(n)) f.priceMax = n;
+  }
+  const dateFrom = sp.get('date_from') ?? sp.get('dateFrom');
+  if (dateFrom) f.dateFrom = dateFrom;
+  const dateTo = sp.get('date_to') ?? sp.get('dateTo');
+  if (dateTo) f.dateTo = dateTo;
+  return f;
+}
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const { slug } = await params;
-    const result = getDigestBySlug(slug);
+    const filters = parseFilters(req);
+    const hasFilters = Object.keys(filters).length > 0;
+    const result = getDigestBySlug(slug, hasFilters ? filters : undefined);
     if (!result) {
       return Response.json({ error: 'Digest not found' }, { status: 404 });
     }
-    // Legacy shape: `digest` (meta) + `events` array. The events are plain
-    // EventRow objects — `curator_note` / `sort_order` used to come from the
-    // digest_events table; those are dropped. Clients display `reasons` via
-    // the audit script; the UI doesn't currently render them.
     return Response.json({ digest: result.digest, events: result.events });
   } catch (err) {
     console.error('Digest detail API error:', err);

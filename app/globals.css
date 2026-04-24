@@ -1866,6 +1866,12 @@ body {
   color: rgba(255,255,255,0.45);
   margin-top: 2px;
 }
+.digest-shelf-empty {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.55);
+  padding: 18px 0 8px;
+  text-align: center;
+}
 .digest-shelf-viewall {
   font-size: 0.78rem;
   font-weight: 600;

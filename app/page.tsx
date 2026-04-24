@@ -1069,6 +1069,7 @@ function HomeInner() {
           <DigestShelf
             onDigestSelect={handleDigestSelect}
             activeDigestSlug={activeDigest?.slug ?? null}
+            filters={filters}
           />
 
           {/* Active-digest banner: shows which preset is applied + clear button */}
