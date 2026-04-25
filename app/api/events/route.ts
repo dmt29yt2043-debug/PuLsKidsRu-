@@ -1,8 +1,27 @@
 import { type NextRequest } from 'next/server';
 import { getEvents } from '@/lib/db';
-import type { FilterState } from '@/lib/types';
+import type { Event, FilterState } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
+
+/** Fields the card grid + map markers + filtering logic actually need.
+ *  Stripping the rest cut the page_size=500 response from ~5 MB to ~600 KB. */
+const HEAVY_FIELDS = [
+  'data',
+  'derisk',
+  'description',
+  'description_source',
+  'class_meta',
+  'schedule',
+  'occurrences',
+  'reviews',
+] as const;
+
+function stripHeavyFields(ev: Event): Event {
+  const out = { ...ev } as Record<string, unknown>;
+  for (const f of HEAVY_FIELDS) delete out[f];
+  return out as unknown as Event;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -87,11 +106,19 @@ export async function GET(request: NextRequest) {
 
     const result = getEvents(filters);
 
+    // Heavy fields used only by EventDetail are stripped from the feed
+    // response — `data` alone was 75% of payload (~3.4 MB on a 500-event
+    // page). The card grid + map markers don't need them; the detail view
+    // re-fetches the full event via /api/events/[id].
+    // Pass `?full=1` to opt out of stripping (audit/debug only).
+    const full = searchParams.get('full') === '1';
+    const events = full ? result.events : result.events.map(stripHeavyFields);
+
     return Response.json({
       total: result.total,
       page,
       page_size,
-      events: result.events,
+      events,
     });
   } catch (error) {
     console.error('Error fetching events:', error);

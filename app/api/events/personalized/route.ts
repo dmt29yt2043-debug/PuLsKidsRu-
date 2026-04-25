@@ -245,21 +245,27 @@ export async function GET(req: NextRequest) {
   // Take top 40
   const top = scored.slice(0, 40);
 
-  // Parse JSON fields. Must include `categories` + `tags` + `data` in
-  // addition to reviews/derisk, otherwise event cards crash in the UI
-  // (event.categories.map is not a function).
+  // Parse `categories` + `tags` (cards crash if these are strings) and coerce
+  // is_free → boolean. Heavy fields (data/derisk/description/...) are dropped
+  // — the feed/cards don't read them, EventDetail refetches via /api/events/[id].
   const tryParse = <T,>(raw: unknown, fallback: T): T => {
     if (typeof raw !== 'string' || !raw) return fallback;
     try { return JSON.parse(raw) as T; } catch { return fallback; }
   };
   const events = top.map(({ event: row, score, reasons }) => {
+    const lite = { ...row } as Record<string, unknown>;
+    delete lite.data;
+    delete lite.derisk;
+    delete lite.description;
+    delete lite.description_source;
+    delete lite.class_meta;
+    delete lite.schedule;
+    delete lite.occurrences;
+    delete lite.reviews;
     return {
-      ...row,
+      ...lite,
       categories: tryParse<string[]>(row.categories, []),
       tags:       tryParse<string[]>(row.tags, []),
-      reviews:    tryParse<unknown[]>(row.reviews, []),
-      derisk:     tryParse<Record<string, unknown>>(row.derisk, {}),
-      data:       tryParse<Record<string, unknown>>(row.data, {}),
       is_free:    Boolean(row.is_free),
       _score:     score,
       _reasons:   reasons,

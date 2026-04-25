@@ -49,13 +49,22 @@ export async function GET(
     if (!result) {
       return Response.json({ error: 'Digest not found' }, { status: 404 });
     }
-    // Parse JSON fields (categories, tags, reviews, derisk, data) and coerce
-    // is_free → boolean. `/api/events` does this via parseEventRow; the digest
-    // endpoint used to return raw DB rows which crashed the frontend
-    // (event.categories.map is not a function in OverviewTab).
-    const events = result.events.map((row) =>
-      parseEventRow(row as unknown as Record<string, unknown>),
-    );
+    // Parse JSON fields (categories, tags) so cards render, then strip heavy
+    // fields (data, derisk, description, …) — same lite shape as /api/events.
+    // EventDetail re-fetches the full row via /api/events/[id] when opened.
+    const events = result.events.map((row) => {
+      const parsed = parseEventRow(row as unknown as Record<string, unknown>);
+      const lite = { ...parsed } as Record<string, unknown>;
+      delete lite.data;
+      delete lite.derisk;
+      delete lite.description;
+      delete lite.description_source;
+      delete lite.class_meta;
+      delete lite.schedule;
+      delete lite.occurrences;
+      delete lite.reviews;
+      return lite;
+    });
     return Response.json({ digest: result.digest, events });
   } catch (err) {
     console.error('Digest detail API error:', err);

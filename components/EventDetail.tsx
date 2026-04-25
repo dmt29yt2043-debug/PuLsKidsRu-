@@ -333,18 +333,41 @@ function LocationTab({ event }: { event: Event }) {
 
 /* ── main component ── */
 
-export default function EventDetail({ event, open, onClose, isFlagged = false, onToggleFlag }: EventDetailProps) {
+export default function EventDetail({ event: eventProp, open, onClose, isFlagged = false, onToggleFlag }: EventDetailProps) {
   const [imgError, setImgError] = useState(false);
   const { isFavorite, toggle } = useFavorites();
-  const liked = event ? isFavorite(event.id) : false;
   const debugMode = useDebugMode();
+
+  // The feed strips heavy fields (description, derisk, schedule, …) to keep
+  // the page_size=500 response small. When the detail panel opens we fetch
+  // the full event from /api/events/[id] and merge it into local state, so
+  // the user sees instant data from the lite event AND the rich sections
+  // (description, "Полезно знать", etc.) populate within ~300 ms.
+  const [hydrated, setHydrated] = useState<Event | null>(null);
+  const event = hydrated ?? eventProp;
+  const liked = event ? isFavorite(event.id) : false;
 
   // Reset transient UI state when the displayed event changes
   const [prevId, setPrevId] = useState<number | null>(null);
-  if (event && event.id !== prevId) {
-    setPrevId(event.id);
+  if (eventProp && eventProp.id !== prevId) {
+    setPrevId(eventProp.id);
     setImgError(false);
+    setHydrated(null);
   }
+
+  useEffect(() => {
+    if (!open || !eventProp) return;
+    const id = eventProp.id;
+    let cancelled = false;
+    fetch(`/api/events/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((full) => {
+        if (cancelled || !full || full.id !== id) return;
+        setHydrated(full as Event);
+      })
+      .catch(() => { /* lite event already shown — silent */ });
+    return () => { cancelled = true; };
+  }, [open, eventProp]);
 
   const handleCopyId = () => {
     if (!event) return;
