@@ -82,12 +82,29 @@ export function getEvents(filters: FilterState & { page?: number; page_size?: nu
   total: number;
 } {
   const db = getDb();
-  // Family-product safety rail: hide 18+ and nightlife by default. They
-  // re-enter only when the user explicitly asks for an adult-bounded age
-  // (handled below via filters.ageMax). Without this, vague chat queries
-  // like "найди что-то недорогое" would surface adult lectures / club
-  // events into a parent-facing feed.
-  const allowAdult = filters.ageMax !== undefined && filters.ageMax >= 16;
+  // Family-product safety rail (tiered):
+  //   - ageMax < 12  → hide 16+ AND 18+
+  //   - ageMax 12-17 → hide 18+ (let 16+ through for teens)
+  //   - ageMax >= 18 → allow all
+  //   - no ageMax    → hide 18+ ONLY (parent-facing default; 16+ stays
+  //                                    for older teens browsing without filter)
+  // Without this, vague chat queries surface adult lectures / club events
+  // into a parent-facing feed.
+  let hideTeenPlus = false;   // hide 16+
+  let hideAdultOnly = true;   // hide 18+
+  if (filters.ageMax === undefined) {
+    hideAdultOnly = true;
+    hideTeenPlus  = true;     // safer default for kids product
+  } else if (filters.ageMax < 12) {
+    hideTeenPlus = true;
+    hideAdultOnly = true;
+  } else if (filters.ageMax < 18) {
+    hideTeenPlus = false;     // teens can see 16+
+    hideAdultOnly = true;
+  } else {
+    hideTeenPlus = false;
+    hideAdultOnly = false;
+  }
   const conditions: string[] = [
     '(status IN (\'published\', \'done\', \'new\') OR status LIKE \'%.done\')',
     // Exclude rewards/loyalty/club programs — not real events
@@ -100,8 +117,11 @@ export function getEvents(filters: FilterState & { page?: number; page_size?: nu
     // Hide past events: keep if it hasn't ended yet (or, if no end time, hasn't started > 1 day ago)
     "(COALESCE(NULLIF(next_end_at, ''), datetime(next_start_at, '+1 day')) >= datetime('now') OR next_start_at IS NULL)",
   ];
-  if (!allowAdult) {
-    conditions.push("(age_label IS NULL OR age_label NOT IN ('16+', '18+'))");
+  const blockedAges: string[] = [];
+  if (hideTeenPlus) blockedAges.push("'16+'");
+  if (hideAdultOnly) blockedAges.push("'18+'");
+  if (blockedAges.length > 0) {
+    conditions.push(`(age_label IS NULL OR age_label NOT IN (${blockedAges.join(',')}))`);
   }
   const params: Record<string, unknown> = {};
 
