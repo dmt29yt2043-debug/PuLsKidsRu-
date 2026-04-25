@@ -25,6 +25,10 @@ const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
 };
 
 export function scoreIndoor(ev: EnrichedEvent): ScoredEvent | null {
+  // Family-appropriate gate
+  const ageLabel = (ev.age_label ?? '').trim();
+  if (ageLabel === '16+' || ageLabel === '18+' || ev.category_l1 === 'nightlife') return null;
+
   const indoor = classifyIndoor(ev);
   if (indoor.confidence < 0.4) return null;
 

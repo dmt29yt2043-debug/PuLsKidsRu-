@@ -129,9 +129,21 @@ function ageFits(ev: EnrichedEvent, minAge: number, maxAge: number): boolean {
 }
 
 const ADULT_AGE_LABELS = new Set(['18+']);
+const TEEN_PLUS_LABELS = new Set(['16+', '18+']);
 
+/** Strict 18+ / nightlife filter — used by digests that explicitly target
+ *  teens or accept the 12-17 range (e.g. /teens). */
 function isAdultOnly(ev: EnrichedEvent): boolean {
   return ADULT_AGE_LABELS.has((ev.age_label ?? '').trim())
+    || (ev.category_l1 === 'nightlife');
+}
+
+/** Family-appropriate filter — also rejects 16+ events. Use in digests
+ *  whose audience is parents with kids 12 and under (tonight, weekend,
+ *  workshops, etc.). The /teens digest deliberately uses isAdultOnly so it
+ *  CAN include 16+ events. */
+function isNotFamilyAppropriate(ev: EnrichedEvent): boolean {
+  return TEEN_PLUS_LABELS.has((ev.age_label ?? '').trim())
     || (ev.category_l1 === 'nightlife');
 }
 
@@ -146,7 +158,7 @@ export function getTonightDigest(events: EnrichedEvent[]): DigestResult {
       'Успеть выйти сегодня — планы без лишнего.', 'СЕГОДНЯ',
       ['today', 'evening', 'quick-plan']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       const t = mskDate(ev.next_start_at);
       if (!t) return false;
       if (ev.next_start_at?.slice(0, 10) !== todayStr) return false;
@@ -176,7 +188,7 @@ export function getTomorrowDigest(events: EnrichedEvent[]): DigestResult {
       'Планируем сегодня — идём завтра.', 'ЗАВТРА',
       ['tomorrow', 'planning']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       return ev.next_start_at?.slice(0, 10) === tomorrow;
     },
     score: (ev) => {
@@ -198,7 +210,7 @@ export function getSundayChillDigest(events: EnrichedEvent[]): DigestResult {
       'Без беготни и громких звуков — просто побыть вместе.', 'СПОКОЙНО',
       ['sunday', 'chill', 'family']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       if (ev.category_l1 === 'nightlife') return false;
       const t = mskDate(ev.next_start_at);
       if (!t) return false;
@@ -228,7 +240,7 @@ export function getAfterWorkDigest(events: EnrichedEvent[]): DigestResult {
       'Вечер буднего дня — рядом с метро и недолго.', 'ПОСЛЕ РАБОТЫ',
       ['weekday', 'evening', 'after-work']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       const t = mskDate(ev.next_start_at);
       if (!t) return false;
       if (t.dow === 0 || t.dow === 6) return false;                 // weekdays only
@@ -338,7 +350,7 @@ export function getTheaterDigest(events: EnrichedEvent[]): DigestResult {
       'Лучшие театральные выходы для всей семьи.', 'ТЕАТР',
       ['theater', 'show']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       const isTheater = ev.category_l1 === 'theater' || ev.formatParsed.includes('theater-show');
       if (!isTheater) return false;
       return ['0', '6+', '12+'].includes((ev.age_label ?? '').trim());
@@ -365,8 +377,17 @@ export function getMusicDigest(events: EnrichedEvent[]): DigestResult {
       'Концерты, оперы, живая музыка — приобщаем к звуку.', 'МУЗЫКА',
       ['music', 'concert']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
-      const isMusic = ev.category_l1 === 'music' || ev.formatParsed.some((f) => f === 'concert' || f === 'live-performance');
+      if (isNotFamilyAppropriate(ev)) return false;
+      // 'live-performance' is too generic — it tags both theater-shows AND
+      // concerts, so including it pulls all kid theater into the music
+      // shelf. Use category_l1='music' (authoritative) or explicit
+      // 'concert' format instead. Theater-show is excluded.
+      if (ev.formatParsed.includes('theater-show')) return false;
+      const isMusic =
+        ev.category_l1 === 'music'
+        || ev.formatParsed.includes('concert')
+        || ev.categoriesParsed.includes('concert')
+        || ev.categoriesParsed.includes('music');
       if (!isMusic) return false;
       return !['18+'].includes((ev.age_label ?? '').trim());
     },
@@ -390,7 +411,7 @@ export function getWorkshopsDigest(events: EnrichedEvent[]): DigestResult {
       'Своими руками — лепка, керамика, рисование, эксперименты.', 'МАСТЕР-КЛАССЫ',
       ['workshop', 'hands-on']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       return ev.formatParsed.some((f) => f === 'workshop' || f === 'class')
         || ev.motivationParsed.includes('create');
     },
@@ -416,7 +437,7 @@ export function getMuseumsDigest(events: EnrichedEvent[]): DigestResult {
       'Полезное время — познавательные экспозиции в Москве.', 'МУЗЕИ',
       ['museum', 'exhibition', 'educational']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       return ev.formatParsed.some((f) => f === 'museum-visit' || f === 'exhibition')
         || /музе|выставк|галере/i.test(ev.textBlob);
     },
@@ -442,7 +463,7 @@ export function getToursDigest(events: EnrichedEvent[]): DigestResult {
       'Открываем город — пешком, с рассказом, с историей.', 'ЭКСКУРСИИ',
       ['tour', 'walk', 'history']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       return ev.formatParsed.some((f) => f === 'guided-walk' || f === 'tour');
     },
     score: (ev) => {
@@ -465,7 +486,7 @@ export function getCinemaDigest(events: EnrichedEvent[]): DigestResult {
       'Просмотры с попкорном — семейный релакс.', 'КИНО',
       ['film', 'screening']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       return ev.category_l1 === 'film'
         || ev.formatParsed.includes('screening');
     },
@@ -488,7 +509,7 @@ export function getNearMetroDigest(events: EnrichedEvent[]): DigestResult {
       'Без машины, без пересадок — прямо от станции.', 'МЕТРО',
       ['transit', 'metro', 'easy-to-reach']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       const s = (ev.subway ?? '').trim();
       return s.length > 0 && s.toLowerCase() !== 'n/a';
     },
@@ -520,7 +541,7 @@ export function getRareDigest(events: EnrichedEvent[]): DigestResult {
       'Единичные даты, премьеры — успеть до конца сезона.', 'РЕДКОЕ',
       ['rare', 'premiere', 'fomo']),
     gate: (ev) => {
-      if (isAdultOnly(ev)) return false;
+      if (isNotFamilyAppropriate(ev)) return false;
       const dates = scheduleDates(ev);
       // Rare = few dates (but not zero — zero usually means no schedule at all)
       if (dates > 0 && dates > 3) return false;

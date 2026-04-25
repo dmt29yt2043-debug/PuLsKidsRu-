@@ -274,23 +274,28 @@ export function classifyAffordable(ev: EnrichedEvent): Signal {
     return { confidence, reasons };
   }
 
-  // Tiered by price_max
-  const pmax = ev.price_max ?? 0;
-  if (pmax > 0 && pmax <= 10) {
+  // Use the HIGHER of price_min/price_max as the actual ceiling. Several rows
+  // in the RU dataset have inverted values (e.g. price_min=102900 with
+  // price_max=1) — relying on price_max alone classified those as
+  // "ультра-дешёвое" and let them into the budget digest.
+  const pmin = ev.price_min ?? 0;
+  const pmax = Math.max(ev.price_max ?? 0, pmin);
+
+  if (pmax > 0 && pmax <= 500) {
     confidence = 0.9;
-    reasons.push(`price ≤ $${pmax}`);
-  } else if (pmax > 0 && pmax <= 20) {
+    reasons.push(`price ≤ ${pmax} ₽`);
+  } else if (pmax > 0 && pmax <= 1000) {
     confidence = 0.75;
-    reasons.push(`price ≤ $${pmax}`);
+    reasons.push(`price ≤ ${pmax} ₽`);
   } else if (pmax > 0 && pmax <= THRESHOLDS.AFFORDABLE_CEILING) {
     confidence = 0.6;
-    reasons.push(`price ≤ $${pmax}`);
+    reasons.push(`price ≤ ${pmax} ₽`);
   } else if (pmax > 0 && pmax <= THRESHOLDS.AFFORDABLE_HARD_CEILING) {
     confidence = 0.3;
-    reasons.push(`price ≤ $${pmax} (on the edge)`);
+    reasons.push(`price ≤ ${pmax} ₽ (на грани)`);
   } else if (pmax > THRESHOLDS.AFFORDABLE_HARD_CEILING) {
     confidence = 0;
-    reasons.push(`price too high ($${pmax})`);
+    reasons.push(`price too high (${pmax} ₽)`);
     return { confidence, reasons };
   }
 

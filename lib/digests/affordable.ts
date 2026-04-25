@@ -25,6 +25,10 @@ const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
 };
 
 export function scoreAffordable(ev: EnrichedEvent): ScoredEvent | null {
+  // Family-appropriate gate — keep 16+/18+/nightlife out of the parent shelf
+  const ageLabel = (ev.age_label ?? '').trim();
+  if (ageLabel === '16+' || ageLabel === '18+' || ev.category_l1 === 'nightlife') return null;
+
   const afford = classifyAffordable(ev);
   if (afford.confidence < 0.5) return null;
 

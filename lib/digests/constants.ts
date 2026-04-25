@@ -223,9 +223,11 @@ export const THRESHOLDS = {
   WEEKEND_WINDOW_DAYS: 14,
   WEEKEND_FALLBACK_DAYS: 28,
 
-  /** Affordable tiers. */
-  AFFORDABLE_CEILING: 30,
-  AFFORDABLE_HARD_CEILING: 75,
+  /** Affordable tiers (RUB). RU pricing is in roubles; old NYC values
+   *  ($30 / $75) silently let through bogus events with `price_max` of 1
+   *  RUB but huge price_min, because 1 ≤ 30. */
+  AFFORDABLE_CEILING:      2000,   // "недорого" sweet spot
+  AFFORDABLE_HARD_CEILING: 5000,   // hard cap above which "budget" lies
 
   /** Worth-it quality gates. */
   WORTH_IT_RATING_MIN: 4.3,

@@ -20,8 +20,22 @@ function computeDateAnchors() {
   const today = now.toISOString().split('T')[0];
   const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
   const tomorrow = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
-  const satOffset = (6 - now.getDay() + 7) % 7 || 7;
-  const sunOffset = (7 - now.getDay()) % 7 || 7;
+
+  // Weekend logic: "the weekend that's relevant right now" — if today is
+  // Sat/Sun we mean THIS one, otherwise the upcoming pair.
+  // Old code had `(6 - day + 7) % 7 || 7` which returned 7 when today was
+  // Saturday, pointing saturday to NEXT week while sunday=tomorrow → the
+  // resulting `dateFrom > dateTo` filter matched zero events.
+  const day = now.getDay(); // 0=Sun..6=Sat
+  let satOffset: number, sunOffset: number;
+  if (day === 6) {                // Saturday → today + tomorrow
+    satOffset = 0; sunOffset = 1;
+  } else if (day === 0) {         // Sunday → just today (yesterday's Sat is past)
+    satOffset = 0; sunOffset = 0;
+  } else {                        // Mon–Fri → upcoming Sat/Sun
+    satOffset = 6 - day;
+    sunOffset = 7 - day;
+  }
   const nextMonOffset = sunOffset + 1;
   const mk = (offset: number) => { const d = new Date(now); d.setDate(d.getDate() + offset); return d.toISOString().split('T')[0]; };
   return {
