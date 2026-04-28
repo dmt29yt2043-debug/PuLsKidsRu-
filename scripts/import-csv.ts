@@ -402,20 +402,53 @@ const norm = {
   outside_moscow_skipped: 0,
 };
 
-// BUG_008: skip events whose next_start_at is explicitly in the past.
-// Events with no date (null / empty) are kept — they may be recurring or
-// have unknown schedules. Only cut rows where the date is set AND < now.
+// BUG_008: skip events that have ALREADY ENDED. We previously cut on
+// `next_start_at < now` alone, which dropped recurring exhibitions /
+// long-running shows whose start was yesterday but end in 2 weeks. Now we
+// keep an event if ANY of these hold:
+//   1. next_start_at is in the future
+//   2. next_end_at is in the future (still running)
+//   3. schedule.items contains any future date
+//   4. no date at all (safe default)
 const NOW_MS = Date.now();
-function isPastEvent(nextStartAt: string | undefined | null): boolean {
-  if (!nextStartAt || nextStartAt.trim() === '' || nextStartAt === 'None' || nextStartAt === 'null') {
-    return false; // no date → keep
+const NOW_DATE = new Date().toISOString().slice(0, 10);
+function isPastEvent(row: Record<string, string>): boolean {
+  const start = row.next_start_at;
+  const end = row.next_end_at;
+
+  // 1. start is in the future → keep
+  if (start && start.trim() !== '' && start !== 'None' && start !== 'null') {
+    const startMs = new Date(start).getTime();
+    if (Number.isFinite(startMs) && startMs >= NOW_MS) return false;
+  } else {
+    // No start → keep (unknown / recurring)
+    return false;
   }
-  try {
-    const ms = new Date(nextStartAt).getTime();
-    return Number.isFinite(ms) && ms < NOW_MS;
-  } catch {
-    return false; // unparseable → keep (safe default)
+
+  // 2. end is in the future → still running → keep
+  if (end && end.trim() !== '' && end !== 'None' && end !== 'null') {
+    const endMs = new Date(end).getTime();
+    if (Number.isFinite(endMs) && endMs >= NOW_MS) return false;
   }
+
+  // 3. schedule.items has any future date → keep
+  const sched = row.schedule;
+  if (sched && sched.includes('items')) {
+    try {
+      const parsed = JSON.parse(
+        sched.replace(/'/g, '"').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null'),
+      );
+      if (parsed && Array.isArray(parsed.items)) {
+        for (const it of parsed.items) {
+          const d = it && (it.date || it.start_at);
+          if (typeof d === 'string' && d.slice(0, 10) >= NOW_DATE) return false;
+        }
+      }
+    } catch { /* ignore parse errors */ }
+  }
+
+  // Otherwise — past
+  return true;
 }
 
 // Moscow geo sanity check: skip events that are clearly outside Moscow
@@ -439,13 +472,16 @@ function isOutsideMoscow(row: Record<string, string>): boolean {
 const insertMany = db.transaction((rows: Record<string, string>[]) => {
   for (const row of rows) {
     try {
-      if (row.status === 'disabled' || row.disabled === 'True' || row.archived === 'True') {
+      // Postgres CSV export uses 't'/'f' (single chars); older dumps 'True'/'False'.
+      const truthy = (v: string | undefined) => v === 'True' || v === 't' || v === 'true' || v === '1';
+      if (row.status === 'disabled' || truthy(row.disabled) || truthy(row.archived)) {
         skipped++;
         continue;
       }
 
-      // BUG_008 — skip past events (saves tokens on every user request)
-      if (isPastEvent(row.next_start_at)) {
+      // BUG_008 — skip events that have fully ended (start, end, AND all
+      // scheduled dates are past). Recurring / long-running events stay.
+      if (isPastEvent(row)) {
         skipped++;
         norm.past_events_skipped++;
         continue;
@@ -473,8 +509,12 @@ const insertMany = db.transaction((rows: Record<string, string>[]) => {
         norm.age_clamped++;
       }
 
-      // BUG_006 — reconcile is_free with price
-      const isFreeFlag = row.is_free === 'True' ? 1 : 0;
+      // BUG_006 — reconcile is_free with price.
+      // CSV uses Postgres boolean export 't'/'f' (single chars). Older
+      // dumps used 'True'/'False'. Accept both.
+      const isFreeFlag =
+        (row.is_free === 'True' || row.is_free === 't' || row.is_free === 'true' || row.is_free === '1')
+          ? 1 : 0;
       const rawPriceMin = row.price_min ? parseFloat(row.price_min) : 0;
       const rawPriceMax = row.price_max ? parseFloat(row.price_max) : 0;
       const { priceMin, priceMax } = reconcileFreeAndPrice(isFreeFlag, rawPriceMin, rawPriceMax);

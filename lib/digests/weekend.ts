@@ -26,6 +26,10 @@ const META: Omit<DigestMeta, 'cover_image' | 'event_count'> = {
 };
 
 export function scoreWeekend(ev: EnrichedEvent, nowMs: number, windowDays: number): ScoredEvent | null {
+  // Family-appropriate gate
+  const ageLabel = (ev.age_label ?? '').trim();
+  if (ageLabel === '16+' || ageLabel === '18+' || ev.category_l1 === 'nightlife') return null;
+
   const weekend = classifyWeekend(ev, nowMs, windowDays);
   if (weekend.confidence === 0) return null;
 

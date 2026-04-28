@@ -82,6 +82,10 @@ function hasDerisk(ev: EnrichedEvent): boolean {
 }
 
 export function scoreWorthIt(ev: EnrichedEvent): ScoredEvent | null {
+  // Family-appropriate gate
+  const ageLabel = (ev.age_label ?? '').trim();
+  if (ageLabel === '16+' || ageLabel === '18+' || ev.category_l1 === 'nightlife') return null;
+
   // Soft family gate — filters out adult-only events.
   const fam = classifyFamily(ev);
   if (fam.confidence < 0.2) return null;
