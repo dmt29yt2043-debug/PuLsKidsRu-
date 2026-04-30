@@ -302,8 +302,14 @@ function HomeInner() {
           params.set('child_ages', kidsForFilter.map((c) => c.age).join(','));
           const genders = kidsForFilter.map((c) => c.gender).join(',');
           params.set('child_genders', genders);
-        } else if (filters.ageMax !== undefined) {
-          params.set('age', String(filters.ageMax));
+        } else if (filters.ageMax !== undefined || (kidsForFilter && kidsForFilter.length === 1)) {
+          // Single-child mode: derive age from ageMax OR from the single
+          // child's age in filterChildren. Earlier branch only used ageMax,
+          // so when chat onboarding wrote `filterChildren=[{age:4,...}]`
+          // without setting ageMax, the request silently dropped the age
+          // filter — UI showed "Кто: 4" but server got no age constraint.
+          const ageVal = filters.ageMax ?? (kidsForFilter ? kidsForFilter[0].age : undefined);
+          if (ageVal !== undefined) params.set('age', String(ageVal));
           if (kidsForFilter && kidsForFilter.length === 1) {
             params.set('child_genders', kidsForFilter[0].gender);
           }
@@ -483,7 +489,7 @@ function HomeInner() {
     setFilters({});
     setPage(1);
     setPriceSliderMin(0);
-    setPriceSliderMax(200);
+    setPriceSliderMax(3000);
     setActiveTab('feed');
     setChatResetKey((k) => k + 1);
   }, []);

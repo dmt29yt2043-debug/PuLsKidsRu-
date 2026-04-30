@@ -657,7 +657,7 @@ export function getCategories(): { value: string; label: string }[] {
     family: 'Дети и родители',
     arts: 'Искусство и культура',
     theater: 'Театр и шоу',
-    attractions: 'Аттракционы',
+    attractions: 'Экскурсии и места', // kudago `attractions` = достопримечательности / квесты / музеи / экскурсии, НЕ "rides/горки"
     books: 'Книги',
     holiday: 'Праздники',
     sports: 'Спорт и фитнес',
