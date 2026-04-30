@@ -498,16 +498,33 @@ const insertMany = db.transaction((rows: Record<string, string>[]) => {
       const lon = row.lon ? parseFloat(row.lon) : null;
       norm.missing_geo += countMissingGeo(lat, lon);
 
-      // BUG_005 — clamp ages
+      // BUG_005 — clamp ages.
+      // CSV schema changed (Apr 30 export): columns renamed
+      //   `age_best_from` → `best_from`, `age_best_to` → `best_to`
+      //   `age_label` column dropped entirely
+      // Accept both old and new column names so we can re-import either dump.
       const rawMin = row.age_min ? parseInt(row.age_min) : null;
-      const rawBestFrom = row.age_best_from ? parseInt(row.age_best_from) : null;
-      const rawBestTo = row.age_best_to ? parseInt(row.age_best_to) : null;
+      const rawBestFrom = row.age_best_from
+        ? parseInt(row.age_best_from)
+        : (row.best_from ? parseInt(row.best_from) : null);
+      const rawBestTo = row.age_best_to
+        ? parseInt(row.age_best_to)
+        : (row.best_to ? parseInt(row.best_to) : null);
       const ageMin = clampAge(rawMin);
       const ageBestFrom = clampAge(rawBestFrom);
       const ageBestTo = clampAge(rawBestTo);
       if (ageMin !== rawMin || ageBestFrom !== rawBestFrom || ageBestTo !== rawBestTo) {
         norm.age_clamped++;
       }
+      // Derive age_label from age_min when the CSV doesn't carry one.
+      // Convention: "0" / "6+" / "12+" / "16+" / "18+" — matches existing UI.
+      const csvAgeLabel = (row.age_label ?? '').trim();
+      const derivedAgeLabel = (() => {
+        if (csvAgeLabel) return csvAgeLabel;
+        if (ageMin === null) return '';
+        if (ageMin === 0) return '0';
+        return `${ageMin}+`;
+      })();
 
       // BUG_006 — reconcile is_free with price.
       // CSV uses Postgres boolean export 't'/'f' (single chars). Older
@@ -584,7 +601,7 @@ const insertMany = db.transaction((rows: Record<string, string>[]) => {
         row.next_start_at || '',
         nextEndAt,
         ageMin,
-        row.age_label || '',
+        derivedAgeLabel,
         ageBestFrom,
         ageBestTo,
         isFreeFlag,
